@@ -34,7 +34,6 @@ import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 import akka.actor.ActorSystem;
-import me.tfeng.playmods.spark.SparkComponent;
 import me.tfeng.playmods.spring.Startable;
 import play.Logger;
 import play.Logger.ALogger;
@@ -51,9 +50,6 @@ public class SparkWorkerStartable implements Startable {
 
   private ActorSystem actorSystem;
 
-  @Autowired
-  private SparkComponent sparkComponent;
-
   @Value("${spark.host}")
   private String sparkHost;
 
@@ -65,9 +61,11 @@ public class SparkWorkerStartable implements Startable {
 
   private File tempDir;
 
+  @Autowired
+  private SparkConf sparkConf;
+
   @Override
   public void onStart() throws Throwable {
-    SparkConf sparkConf = sparkComponent.getSparkConf();
     WorkerArguments workerArguments = new WorkerArguments(new String[] {"spark://localhost:7077"},
         sparkConf);
     tempDir = Files.createTempDirectory("sparkWorker").toFile();

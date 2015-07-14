@@ -20,13 +20,13 @@
 
 package beans;
 
+import org.apache.spark.SparkConf;
 import org.apache.spark.deploy.master.Master;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import akka.actor.ActorSystem;
-import me.tfeng.playmods.spark.SparkComponent;
 import me.tfeng.playmods.spring.Startable;
 
 /**
@@ -38,7 +38,7 @@ public class SparkMasterStartable implements Startable {
   private ActorSystem actorSystem;
 
   @Autowired
-  private SparkComponent sparkComponent;
+  private SparkConf sparkConf;
 
   @Value("${spark.host}")
   private String sparkHost;
@@ -52,7 +52,7 @@ public class SparkMasterStartable implements Startable {
   @Override
   public void onStart() throws Throwable {
     actorSystem = Master.startSystemAndActor(sparkHost, sparkMasterPort, sparkMasterWebUIPort,
-        sparkComponent.getSparkConf())._1();
+        sparkConf)._1();
   }
 
   @Override

@@ -18,7 +18,7 @@
 
   <util:properties id="play-mods.kafka.producer-properties" location="producer.properties" />
 
-  <bean id="play-mods.spark.conf" class="me.tfeng.playmods.factories.SparkConfFactory">
+  <bean class="factories.SparkConfFactory">
     <property name="appName" value="${spark.app.name}" />
     <property name="master" value="${spark.master}" />
     <property name="properties">

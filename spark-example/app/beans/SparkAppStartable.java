@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.spark.Accumulable;
+import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaDStream;
@@ -41,7 +42,6 @@ import org.springframework.stereotype.Component;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import me.tfeng.playmods.spark.SparkComponent;
 import me.tfeng.playmods.spring.Startable;
 import scala.Tuple2;
 import utils.AccumulableLongMap;
@@ -62,7 +62,7 @@ public class SparkAppStartable implements Startable {
   private String kafkaTopic;
 
   @Autowired
-  private SparkComponent sparkComponent;
+  private SparkConf sparkConf;
 
   private JavaStreamingContext streamingContext;
 
@@ -75,7 +75,7 @@ public class SparkAppStartable implements Startable {
 
   @Override
   public void onStart() throws Throwable {
-    JavaSparkContext sparkContext = new JavaSparkContext(sparkComponent.getSparkContext());
+    JavaSparkContext sparkContext = new JavaSparkContext(sparkConf);
     streamingContext = new JavaStreamingContext(sparkContext, Durations.seconds(1));
     Accumulable<Map<String, Long>, Entry<String, Long>> accumulator =
         sparkContext.accumulable(Maps.newHashMap(), new AccumulableLongMap());
@@ -98,6 +98,7 @@ public class SparkAppStartable implements Startable {
 
   @Override
   public void onStop() throws Throwable {
-    streamingContext.stop(false);
+    streamingContext.stop();
+
   }
 }
