@@ -1,0 +1,22 @@
+@namespace("controllers.protocols")
+protocol Message {
+
+  record RequestHeader {
+    string remoteAddress;
+    string host;
+    string method;
+    string path;
+    map<array<string>> query;
+    boolean secure;
+    long timestamp;
+  }
+
+  record UserMessage {
+    string subject;
+    string action;
+    string object;
+    union { null, RequestHeader } requestHeader;
+  }
+
+  void send(UserMessage message);
+}

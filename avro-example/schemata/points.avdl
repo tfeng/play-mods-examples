@@ -1,0 +1,17 @@
+@namespace("controllers.protocols")
+protocol Points {
+
+  record Point {
+    double x, y;
+  }
+
+  error KTooLargeError {
+    int k;
+  }
+
+  void addPoint(Point point);
+
+  void clear() oneway;
+
+  array<Point> getNearestPoints(Point from, int k) throws KTooLargeError;
+}

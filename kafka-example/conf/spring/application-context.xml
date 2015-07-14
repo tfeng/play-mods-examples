@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/util
+                           http://www.springframework.org/schema/util/spring-util.xsd">
+
+  <context:annotation-config />
+
+  <context:component-scan base-package="beans" />
+
+  <context:property-placeholder />
+
+  <util:map id="play-mods.avro.protocol-implementations" key-type="java.lang.Class">
+    <entry key="controllers.protocols.Message" value-ref="messageImpl" />
+  </util:map>
+
+  <util:properties id="play-mods.kafka.consumer-properties" location="consumer.properties" />
+
+  <util:properties id="play-mods.kafka.producer-properties" location="producer.properties" />
+
+</beans>

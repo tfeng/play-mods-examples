@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/security
+                           http://www.springframework.org/schema/security/spring-security.xsd
+                           http://www.springframework.org/schema/security/oauth2
+                           http://www.springframework.org/schema/security/spring-security-oauth2.xsd">
+
+  <bean id="passwordEncoder"
+        class="org.springframework.security.crypto.password.StandardPasswordEncoder">
+    <constructor-arg value="${security.password-encoder.secret}" />
+  </bean>
+
+  <bean id="clientDetailsUserService"
+        class="org.springframework.security.oauth2.provider.client.ClientDetailsUserDetailsService">
+    <constructor-arg ref="oauth2-example.client-details-service" />
+  </bean>
+
+  <bean id="inMemoryTokenStore"
+        class="org.springframework.security.oauth2.provider.token.store.InMemoryTokenStore" />
+
+  <bean id="oauth2-example.token-services"
+        class="org.springframework.security.oauth2.provider.token.DefaultTokenServices">
+    <property name="tokenStore" ref="inMemoryTokenStore" />
+    <property name="supportRefreshToken" value="true" />
+    <property name="clientDetailsService" ref="oauth2-example.client-details-service" />
+  </bean>
+
+  <alias alias="oauth2-example.token-granter" name="oauth2TokenGranter" />
+
+  <bean id="userApprovalHandler"
+        class="org.springframework.security.oauth2.provider.approval.TokenStoreUserApprovalHandler">
+    <property name="tokenStore" ref="inMemoryTokenStore" />
+    <property name="requestFactory">
+      <bean class="org.springframework.security.oauth2.provider.request.DefaultOAuth2RequestFactory">
+        <constructor-arg ref="oauth2-example.client-details-service" />
+      </bean>
+    </property>
+  </bean>
+
+  <bean id="oauth2-example.authentication-manager"
+        class="org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationManager">
+    <property name="tokenServices" ref="oauth2-example.token-services" />
+  </bean>
+
+  <security:authentication-manager>
+    <security:authentication-provider user-service-ref="simpleUserDetailsService">
+      <security:password-encoder ref="passwordEncoder" />
+    </security:authentication-provider>
+  </security:authentication-manager>
+
+  <security:authentication-manager id="oauth2-example.client-authentication-manager">
+    <security:authentication-provider user-service-ref="clientDetailsUserService" />
+  </security:authentication-manager>
+
+  <oauth:client-details-service id="oauth2-example.client-details-service">
+    <oauth:client client-id="${security.trusted.client.id}"
+                  secret="${security.trusted.client.secret}"
+                  authorized-grant-types="authorization_code,implicit,refresh_token,client_credentials,password"
+                  authorities="ROLE_CLIENT,ROLE_TRUSTED_CLIENT"
+                  scope="read,write,trust"
+                  access-token-validity="864000" />
+    <oauth:client client-id="${security.untrusted.client.id}"
+                  secret="${security.untrusted.client.secret}"
+                  authorized-grant-types="authorization_code,implicit,refresh_token,client_credentials,password"
+                  authorities="ROLE_CLIENT,ROLE_TRUSTED_CLIENT"
+                  scope="read,write"
+                  access-token-validity="864000" />
+  </oauth:client-details-service>
+
+  <oauth:authorization-server client-details-service-ref="oauth2-example.client-details-service"
+                              token-services-ref="oauth2-example.token-services"
+                              user-approval-handler-ref="userApprovalHandler">
+    <oauth:authorization-code />
+    <oauth:implicit />
+    <oauth:refresh-token />
+    <oauth:client-credentials />
+    <oauth:password />
+  </oauth:authorization-server>
+
+</beans>

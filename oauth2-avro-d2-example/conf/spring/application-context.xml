@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/util
+                           http://www.springframework.org/schema/util/spring-util.xsd">
+
+  <context:annotation-config />
+
+  <context:component-scan base-package="beans, controllers, security" />
+
+  <context:property-placeholder location="avro-d2.properties, security.properties" />
+
+  <util:map id="play-mods.avro.protocol-implementations" key-type="java.lang.Class">
+    <entry key="controllers.protocols.Example" value-ref="example" />
+  </util:map>
+
+  <util:map id="play-mods.avro-d2.protocol-paths" key-type="java.lang.Class">
+    <entry key="controllers.protocols.Example" value="/example" />
+  </util:map>
+
+  <bean id="play-mods.oauth2.authentication-manager" class="factories.LocalClientFactory">
+    <property name="bean" ref="authenticationManagerImpl" />
+    <property name="interfaceClass" value="me.tfeng.playmods.oauth2.AuthenticationManagerClient" />
+  </bean>
+
+</beans>

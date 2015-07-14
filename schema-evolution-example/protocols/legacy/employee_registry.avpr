@@ -1,0 +1,68 @@
+{
+  "protocol" : "EmployeeRegistry",
+  "namespace" : "controllers.protocols",
+  "types" : [ {
+    "type" : "record",
+    "name" : "Employee",
+    "fields" : [ {
+      "name" : "id",
+      "type" : [ "null", "long" ],
+      "default" : null
+    }, {
+      "name" : "firstName",
+      "type" : {
+        "type" : "string",
+        "avro.java.string" : "String"
+      }
+    }, {
+      "name" : "lastName",
+      "type" : {
+        "type" : "string",
+        "avro.java.string" : "String"
+      }
+    } ]
+  } ],
+  "messages" : {
+    "addEmployee" : {
+      "request" : [ {
+        "name" : "employee",
+        "type" : "Employee"
+      } ],
+      "response" : "long"
+    },
+    "removeEmployee" : {
+      "request" : [ {
+        "name" : "employeeId",
+        "type" : "long"
+      } ],
+      "response" : "null"
+    },
+    "makeManager" : {
+      "request" : [ {
+        "name" : "managerId",
+        "type" : "long"
+      }, {
+        "name" : "employeeId",
+        "type" : "long"
+      } ],
+      "response" : "null"
+    },
+    "getManager" : {
+      "request" : [ {
+        "name" : "employeeId",
+        "type" : "long"
+      } ],
+      "response" : "Employee"
+    },
+    "getEmployees" : {
+      "request" : [ {
+        "name" : "managerId",
+        "type" : "long"
+      } ],
+      "response" : {
+        "type" : "array",
+        "items" : "Employee"
+      }
+    }
+  }
+}

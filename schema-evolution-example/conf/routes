@@ -1,0 +1,10 @@
+POST    /employeeRegistry       me.tfeng.playmods.avro.d2.AvroD2BinaryIpcController.post(protocol = "controllers.protocols.EmployeeRegistry")
+
+GET     /legacy/addEmployee     controllers.LegacyProtocolController.addEmployee(firstName, lastName)
+GET     /legacy/countEmployees  controllers.LegacyProtocolController.countEmployees()
+GET     /legacy/getEmployees    controllers.LegacyProtocolController.getEmployees(managerId: Long)
+GET     /legacy/getManager      controllers.LegacyProtocolController.getManager(employeeId: Long)
+GET     /legacy/makeManager     controllers.LegacyProtocolController.makeManager(managerId: Long, employeeId: Long)
+GET     /legacy/removeEmployee  controllers.LegacyProtocolController.removeEmployee(employeeId: Long)
+
+POST    /current/:message       me.tfeng.playmods.avro.JsonIpcController.post(message, protocol = "controllers.protocols.EmployeeRegistry")

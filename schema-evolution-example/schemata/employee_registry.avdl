@@ -1,0 +1,33 @@
+@namespace("controllers.protocols")
+protocol EmployeeRegistry {
+
+  enum Gender {
+    MALE, FEMALE
+  }
+
+  record Date {
+    int year;
+    int month;
+    int day;
+  }
+
+  record Employee {
+    union { null, long } id = null;
+    String firstName;
+    String lastName;
+    union { null, Gender } gender = null;
+    union { null, Date } dateOfBirth = null;
+  }
+
+  long addEmployee(Employee employee);
+
+  void removeEmployee(long employeeId);
+
+  int countEmployees();
+
+  void makeManager(long managerId, long employeeId);
+
+  Employee getManager(long employeeId);
+
+  array<Employee> getEmployees(long managerId);
+}

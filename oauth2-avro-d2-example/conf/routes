@@ -1,0 +1,6 @@
+POST    /example                    controllers.Application.postAvroBinary()
+GET     /proxy                      controllers.Application.invoke(message ?= "message from client")
+
+POST    /client/authenticate        controllers.AuthenticationController.authenticateClient()
+POST    /user/authenticate          controllers.AuthenticationController.authenticateUser()
+POST    /user/refresh               controllers.AuthenticationController.refreshUserAccessToken()

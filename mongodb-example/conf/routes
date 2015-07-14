@@ -1,0 +1,2 @@
+POST    /points              me.tfeng.playmods.avro.BinaryIpcController.post(protocol = "controllers.protocols.Points")
+POST    /points/:message     me.tfeng.playmods.avro.JsonIpcController.post(message, protocol = "controllers.protocols.Points")

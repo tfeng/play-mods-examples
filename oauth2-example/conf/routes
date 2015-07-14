@@ -1,0 +1,5 @@
+GET     /user/get                   controllers.Application.userDetails()
+
+POST    /client/authenticate        controllers.AuthenticationController.authenticateClient()
+POST    /user/authenticate          controllers.AuthenticationController.authenticateUser()
+POST    /user/refresh               controllers.AuthenticationController.refreshUserAccessToken()
