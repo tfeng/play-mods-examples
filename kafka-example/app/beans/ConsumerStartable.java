@@ -79,7 +79,7 @@ public class ConsumerStartable implements ExtendedStartable {
   private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
   @Override
-  public void afterStart() throws Throwable {
+  public void afterStart() {
     consumer = kafkaComponent.createConsumerConnector();
     List<KafkaStream<byte[], byte[]>> streams =
         consumer.createMessageStreams(Collections.singletonMap(Constants.TOPIC, 1))
@@ -90,15 +90,15 @@ public class ConsumerStartable implements ExtendedStartable {
   }
 
   @Override
-  public void afterStop() throws Throwable {
+  public void afterStop() {
   }
 
   @Override
-  public void beforeStart() throws Throwable {
+  public void beforeStart() {
   }
 
   @Override
-  public void beforeStop() throws Throwable {
+  public void beforeStop() {
     consumer.shutdown();
     scheduler.shutdown();
   }
