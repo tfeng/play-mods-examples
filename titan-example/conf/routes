@@ -1,0 +1,3 @@
+GET     /add                   controllers.Application.addPerson(name: String, age: Int)
+GET     /get                   controllers.Application.getPerson(name: String)
+GET     /betweenAges           controllers.Application.getPersonsBetweenAges(min: Int ?= 0, max: Int ?= 120)
