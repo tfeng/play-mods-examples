@@ -22,6 +22,7 @@ package beans;
 
 import java.time.Duration;
 
+import me.tfeng.playmods.titan.MongoDbIndexProvider;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -52,12 +53,6 @@ public class TitanServer implements Startable {
   @Value("${ids.num-partitions}")
   private int idsNumPartitions;
 
-  @Value("${index.search.backend}")
-  private String indexSearchBackend;
-
-  @Value("${index.search.directory}")
-  private String indexSearchDirectory;
-
   public TitanGraph getGraph() {
     return graph;
   }
@@ -66,8 +61,7 @@ public class TitanServer implements Startable {
   public void onStart() throws Throwable {
     graph = TitanFactory.build()
         .set("storage.backend", MongoDbStoreManager.class.getName())
-        .set("index.search.backend", indexSearchBackend)
-        .set("index.search.directory", indexSearchDirectory)
+        .set("index.search.backend", MongoDbIndexProvider.class.getName())
         .set("ids.num-partitions", idsNumPartitions)
         .set("ids.authority.wait-time", Duration.ofMillis(idsAuthorityWaitTime))
         .open();
