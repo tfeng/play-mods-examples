@@ -16,9 +16,11 @@
 package controllers;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
+import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,7 +31,6 @@ import com.thinkaurelius.titan.core.TitanVertex;
 import beans.TitanServer;
 import play.Logger;
 import play.Logger.ALogger;
-import play.libs.F.Promise;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Results;
@@ -45,35 +46,61 @@ public class Application extends Controller {
   @Autowired
   private TitanServer titan;
 
-  public Promise<Result> addPerson(String name, int age) {
+  public Result addPerson(String name, int age) {
     TitanTransaction transaction = titan.getGraph().newTransaction();
     try {
       TitanVertex vertex = transaction.addVertex("Person");
       vertex.property("name", name);
       vertex.property("age", age);
       transaction.commit();
-      return Promise.pure(Results.ok());
-    } catch (Throwable t) {
-      LOG.error("Unable to add person with name " + name + " and age " + age, t);
-      throw t;
+      return Results.ok();
+    } finally {
+      transaction.close();
     }
   }
 
-  public Promise<Result> getPerson(String name) {
+  public Result getFriends(String name) {
+    TitanTransaction transaction = titan.getGraph().newTransaction();
     try {
-      Iterable<TitanVertex> vertices = titan.getGraph().query().has("name", name).vertices();
+      GraphTraversalSource traversal = transaction.traversal();
+      GraphTraversal<Vertex, Object> names = traversal.V()
+          .has("name", name)
+          .local(__.bothE("friend").order().by("strength", Order.decr))
+          .otherV()
+          .dedup()
+          .values("name");
+      if (names.hasNext()) {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("The following person(s) are friends of " + name + ": ");
+        names.forEachRemaining(friendName -> buffer.append(friendName + ", "));
+        return Results.ok(buffer.substring(0, buffer.length() - 2) + ".\n");
+      } else {
+        return Results.ok("No one is friend of " + name + ".\n");
+      }
+    } catch (Exception e) {
+      LOG.error("Unable to find friends", e);
+      return Results.badRequest();
+    } finally {
+      transaction.close();
+    }
+  }
+
+  public Result getPerson(String name) {
+    TitanTransaction transaction = titan.getGraph().newTransaction();
+    try {
+      Iterable<TitanVertex> vertices = transaction.query().has("name", name).vertices();
       TitanVertex vertex = vertices.iterator().next();
       int age = vertex.value("age");
-      return Promise.pure(Results.ok(name + " is " + age + " year(s) old.\n"));
-    } catch (Throwable t) {
-      LOG.error("Unable to get person with name " + name, t);
-      throw t;
+      return Results.ok(name + " is " + age + " year(s) old.\n");
+    } finally {
+      transaction.close();
     }
   }
 
-  public Promise<Result> getPersonsBetweenAges(int min, int max) {
+  public Result getPersonsBetweenAges(int min, int max) {
+    TitanTransaction transaction = titan.getGraph().newTransaction();
     try {
-      GraphTraversalSource traversal = titan.getGraph().traversal();
+      GraphTraversalSource traversal = transaction.traversal();
       GraphTraversal<Vertex, String> names = traversal.V()
           .has("age", new P(Compare.gte, min))
           .has("age", new P(Compare.lte, max))
@@ -82,13 +109,36 @@ public class Application extends Controller {
         StringBuffer buffer = new StringBuffer();
         buffer.append("The following person(s) are between " + min + " and " + max + ": ");
         names.forEachRemaining(name -> buffer.append(name + ", "));
-        return Promise.pure(Results.ok(buffer.substring(0, buffer.length() - 2) + ".\n"));
+        return Results.ok(buffer.substring(0, buffer.length() - 2) + ".\n");
       } else {
-        return Promise.pure(Results.ok("No one is between " + min + " and " + max + ".\n"));
+        return Results.ok("No one is between " + min + " and " + max + ".\n");
       }
-    } catch (Throwable t) {
-      LOG.error("Unable to get persons with ages between " + min + " and " + max, t);
-      throw t;
+    } finally {
+      transaction.close();
+    }
+  }
+
+  public Result setEnemy(String name1, String name2, int strength) {
+    createEdge(name1, name2, "enemy", strength);
+    return Results.ok();
+  }
+
+  public Result setFriend(String name1, String name2, int strength) {
+    createEdge(name1, name2, "friend", strength);
+    return Results.ok();
+  }
+
+  private void createEdge(String name1, String name2, String label, int strength) {
+    TitanTransaction transaction = titan.getGraph().newTransaction();
+    try {
+      Iterable<TitanVertex> vertices1 = transaction.query().has("name", name1).vertices();
+      TitanVertex vertex1 = vertices1.iterator().next();
+      Iterable<TitanVertex> vertices2 = transaction.query().has("name", name2).vertices();
+      TitanVertex vertex2 = vertices2.iterator().next();
+      vertex1.addEdge(label, vertex2, "strength", strength);
+      transaction.commit();
+    } finally {
+      transaction.close();
     }
   }
 }

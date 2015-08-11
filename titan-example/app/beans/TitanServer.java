@@ -22,17 +22,23 @@ package beans;
 
 import java.time.Duration;
 
-import me.tfeng.playmods.titan.MongoDbIndexProvider;
+import org.apache.tinkerpop.gremlin.process.traversal.Order;
+import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.mongodb.MongoClient;
+import com.thinkaurelius.titan.core.EdgeLabel;
 import com.thinkaurelius.titan.core.PropertyKey;
 import com.thinkaurelius.titan.core.TitanFactory;
 import com.thinkaurelius.titan.core.TitanGraph;
 import com.thinkaurelius.titan.core.schema.TitanManagement;
 
 import me.tfeng.playmods.spring.Startable;
+import me.tfeng.playmods.titan.MongoDbIndexProvider;
 import me.tfeng.playmods.titan.MongoDbStoreManager;
 import play.Logger;
 import play.Logger.ALogger;
@@ -53,12 +59,26 @@ public class TitanServer implements Startable {
   @Value("${ids.num-partitions}")
   private int idsNumPartitions;
 
+  @Value("${titan-example.reset-data:false}")
+  private boolean resetData;
+
+  @Value("${play-mods.titan.mongo-db-name}")
+  private String dbName;
+
+  @Autowired
+  @Qualifier("play-mods.titan.mongo-client")
+  private MongoClient mongoClient;
+
   public TitanGraph getGraph() {
     return graph;
   }
 
   @Override
   public void onStart() throws Throwable {
+    if (resetData) {
+      mongoClient.getDatabase(dbName).drop();
+    }
+
     graph = TitanFactory.build()
         .set("storage.backend", MongoDbStoreManager.class.getName())
         .set("index.search.backend", MongoDbIndexProvider.class.getName())
@@ -68,10 +88,58 @@ public class TitanServer implements Startable {
     LOG.info("Titan graph opened");
 
     TitanManagement management = graph.openManagement();
-    PropertyKey name = management.makePropertyKey("name").dataType(String.class).make();
-    PropertyKey age = management.makePropertyKey("age").dataType(Integer.class).make();
-    management.buildIndex("byName", Vertex.class).addKey(name).unique().buildCompositeIndex();
-    management.buildIndex("byAge", Vertex.class).addKey(age).buildMixedIndex("search");
+
+    PropertyKey name;
+    if (graph.containsPropertyKey("name")) {
+      name = graph.getPropertyKey("name");
+    } else {
+      name = management.makePropertyKey("name").dataType(String.class).make();
+    }
+
+    PropertyKey age;
+    if (graph.containsPropertyKey("age")) {
+      age = graph.getPropertyKey("age");
+    } else {
+      age = management.makePropertyKey("age").dataType(Integer.class).make();
+    }
+
+    PropertyKey strength;
+    if (graph.containsPropertyKey("strength")) {
+      strength = graph.getPropertyKey("strength");
+    } else {
+      strength = management.makePropertyKey("strength").dataType(Integer.class).make();
+    }
+
+    EdgeLabel friend;
+    if (graph.containsEdgeLabel("friend")) {
+      friend = graph.getEdgeLabel("friend");
+    } else {
+      friend = management.makeEdgeLabel("friend").signature(strength).make();
+    }
+
+    EdgeLabel enemy;
+    if (graph.containsEdgeLabel("enemy")) {
+      enemy = graph.getEdgeLabel("enemy");
+    } else {
+      enemy = management.makeEdgeLabel("enemy").signature(strength).make();
+    }
+
+    if (!management.containsGraphIndex("byName")) {
+      management.buildIndex("byName", Vertex.class).addKey(name).unique().buildCompositeIndex();
+    }
+
+    if (!management.containsGraphIndex("byAge")) {
+      management.buildIndex("byAge", Vertex.class).addKey(age).buildMixedIndex("search");
+    }
+
+    if (!management.containsRelationIndex(friend, "friendByStrength")) {
+      management.buildEdgeIndex(friend, "friendByStrength", Direction.BOTH, Order.decr, strength);
+    }
+
+    if (!management.containsRelationIndex(enemy, "enemyByStrength")) {
+      management.buildEdgeIndex(enemy, "enemyByStrength", Direction.BOTH, Order.decr, strength);
+    }
+
     management.commit();
     LOG.info("Titan graph index created");
   }
