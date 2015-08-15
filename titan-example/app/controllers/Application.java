@@ -15,12 +15,15 @@
 
 package controllers;
 
+import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.__;
+import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.bothE;
+import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.local;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -65,7 +68,7 @@ public class Application extends Controller {
       GraphTraversalSource traversal = transaction.traversal();
       GraphTraversal<Vertex, Object> names = traversal.V()
           .has("name", name)
-          .local(__.bothE("friend").order().by("strength", Order.decr))
+          .local(bothE("friend").order().by("strength", Order.decr))
           .otherV()
           .dedup()
           .values("name");
@@ -77,6 +80,36 @@ public class Application extends Controller {
       } else {
         return Results.ok("No one is friend of " + name + ".\n");
       }
+    } catch (Exception e) {
+      LOG.error("Unable to find friends", e);
+      return Results.badRequest();
+    } finally {
+      transaction.close();
+    }
+  }
+
+  public Result getMoreFriends(String name) {
+    TitanTransaction transaction = titan.getGraph().newTransaction();
+    try {
+      GraphTraversalSource traversal = transaction.traversal();
+      GraphTraversal<Vertex, Object> names = traversal.V()
+          .has("name", name)
+          .as("source")
+          .union(
+              local(bothE("friend").order().by("strength", Order.decr)).otherV()
+                  .union(__(), local(bothE("friend").order().by("strength", Order.decr)).otherV()),
+              local(bothE("enemy").order().by("strength", Order.decr)).otherV()
+                  .union(__(), local(bothE("enemy").order().by("strength", Order.decr)).otherV()))
+          .dedup()
+          .where(P.neq("source"))
+          .values("name");
+      if (names.hasNext()) {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("The following person(s) are friends of " + name + ": ");
+        names.forEachRemaining(friendName -> buffer.append(friendName + ", "));
+        return Results.ok(buffer.substring(0, buffer.length() - 2) + ".\n");
+      }
+      return Results.ok("No one is friend of " + name + ".\n");
     } catch (Exception e) {
       LOG.error("Unable to find friends", e);
       return Results.badRequest();

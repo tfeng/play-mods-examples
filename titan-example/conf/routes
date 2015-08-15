@@ -5,3 +5,4 @@ GET     /betweenAges           controllers.Application.getPersonsBetweenAges(min
 GET     /setFriend             controllers.Application.setFriend(name1: String, name2: String, strength: Int ?= 50)
 GET     /setEnemy              controllers.Application.setEnemy(name1: String, name2: String, strength: Int ?= 50)
 GET     /getFriends            controllers.Application.getFriends(name: String)
+GET     /getMoreFriends        controllers.Application.getMoreFriends(name: String)
