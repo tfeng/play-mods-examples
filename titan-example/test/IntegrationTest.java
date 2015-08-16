@@ -20,7 +20,6 @@
 
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoDatabase;
-import me.tfeng.playmods.spring.ApplicationManager;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor;

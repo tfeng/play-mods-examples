@@ -34,7 +34,7 @@ import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 import akka.actor.ActorSystem;
-import me.tfeng.playmods.spring.Startable;
+import me.tfeng.toolbox.spring.Startable;
 import play.Logger;
 import play.Logger.ALogger;
 import scala.Option;

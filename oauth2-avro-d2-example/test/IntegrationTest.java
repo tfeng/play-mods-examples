@@ -40,7 +40,7 @@ import controllers.protocols.ExampleClient;
 import me.tfeng.playmods.avro.AvroComponent;
 import me.tfeng.playmods.http.HttpRequestPoster;
 import me.tfeng.playmods.http.RequestPreparer;
-import me.tfeng.playmods.spring.ApplicationManager;
+import me.tfeng.playmods.modules.SpringModule;
 import play.libs.F.Promise;
 import play.libs.Json;
 import play.libs.ws.WS;
@@ -236,10 +236,10 @@ public class IntegrationTest {
   }
 
   private AvroComponent getAvroComponent() {
-    return ApplicationManager.getApplicationManager().getBean(AvroComponent.class);
+    return SpringModule.getApplicationManager().getBean(AvroComponent.class);
   }
 
   private HttpRequestPoster getRequestPoster() {
-    return ApplicationManager.getApplicationManager().getBean(HttpRequestPoster.class);
+    return SpringModule.getApplicationManager().getBean(HttpRequestPoster.class);
   }
 }

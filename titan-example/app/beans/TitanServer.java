@@ -34,7 +34,7 @@ import com.thinkaurelius.titan.core.PropertyKey;
 import com.thinkaurelius.titan.core.TitanGraph;
 import com.thinkaurelius.titan.core.schema.TitanManagement;
 
-import me.tfeng.playmods.spring.Startable;
+import me.tfeng.toolbox.spring.Startable;
 import play.Logger;
 import play.Logger.ALogger;
 

@@ -6,7 +6,8 @@ if [ x"$VER" == x"" ]; then
   exit 1
 fi
 
-ORG=me.tfeng.play-mods
-
-sed -i .bak -E "s/^(.*\"$ORG\".*)[0-9]+\\.[0-9]+\\.[0-9]+(-SNAPSHOT)?(\"[^\"]*)/\1$VER\3/" *-example/build.sbt *-example/project/plugins.sbt \
+for ORG in me.tfeng.play-mods me.tfeng.toolbox; do
+  sed -i .bak -E "s/^(.*\"$ORG\".*)[0-9]+\\.[0-9]+\\.[0-9]+(-SNAPSHOT)?(\"[^\"]*)/\1$VER\3/" \
+    *-example/build.sbt *-example/project/plugins.sbt \
   && rm *-example/build.sbt.bak *-example/project/plugins.sbt.bak
+done

@@ -23,8 +23,8 @@ package beans;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import me.tfeng.playmods.mongodb.OplogItem;
-import me.tfeng.playmods.mongodb.OplogItemHandler;
+import me.tfeng.toolbox.mongodb.OplogItem;
+import me.tfeng.toolbox.mongodb.OplogItemHandler;
 import play.Logger;
 import play.Logger.ALogger;
 

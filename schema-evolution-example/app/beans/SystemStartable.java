@@ -33,7 +33,7 @@ import org.apache.zookeeper.server.persistence.FileTxnSnapLog;
 import org.apache.zookeeper.server.quorum.QuorumPeerConfig;
 import org.springframework.stereotype.Component;
 
-import me.tfeng.playmods.spring.Startable;
+import me.tfeng.toolbox.spring.Startable;
 import play.Logger;
 import play.Logger.ALogger;
 

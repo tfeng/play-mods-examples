@@ -42,7 +42,7 @@ import org.springframework.stereotype.Component;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import me.tfeng.playmods.spring.Startable;
+import me.tfeng.toolbox.spring.Startable;
 import scala.Tuple2;
 import utils.AccumulableLongMap;
 

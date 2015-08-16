@@ -42,7 +42,7 @@ import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.serializer.StringDecoder;
 import me.tfeng.playmods.avro.AvroComponent;
 import me.tfeng.playmods.kafka.AvroDecoder;
-import me.tfeng.playmods.spring.ApplicationManager;
+import me.tfeng.playmods.modules.SpringModule;
 import utils.Constants;
 
 /**
@@ -97,6 +97,6 @@ public class IntegrationTest {
   }
 
   private AvroComponent getAvroComponent() {
-    return ApplicationManager.getApplicationManager().getBean(AvroComponent.class);
+    return SpringModule.getApplicationManager().getBean(AvroComponent.class);
   }
 }

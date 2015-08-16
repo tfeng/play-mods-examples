@@ -27,7 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import akka.actor.ActorSystem;
-import me.tfeng.playmods.spring.Startable;
+import me.tfeng.toolbox.spring.Startable;
 
 /**
  * @author Thomas Feng (huining.feng@gmail.com)

@@ -49,7 +49,8 @@ import controllers.protocols.Point;
 import controllers.protocols.Points;
 import controllers.protocols.PointsClient;
 import me.tfeng.playmods.avro.AvroComponent;
-import me.tfeng.playmods.spring.ApplicationManager;
+import me.tfeng.playmods.modules.SpringModule;
+import me.tfeng.toolbox.spring.ApplicationManager;
 import play.libs.F.Promise;
 
 /**
@@ -62,8 +63,7 @@ public class IntegrationTest {
   @Test
   public void testExampleBinaryRequest() {
     running(testServer(3333), () -> {
-      AvroComponent avroComponent = ApplicationManager.getApplicationManager().getBean(
-          AvroComponent.class);
+      AvroComponent avroComponent = SpringModule.getApplicationManager().getBean(AvroComponent.class);
       try {
         Example example =
             avroComponent.client(Example.class, new URL("http://localhost:3333/example"));
@@ -77,8 +77,7 @@ public class IntegrationTest {
   @Test
   public void testExampleBinaryRequestAsync() {
     running(testServer(3333), () -> {
-      AvroComponent avroComponent = ApplicationManager.getApplicationManager().getBean(
-          AvroComponent.class);
+      AvroComponent avroComponent = SpringModule.getApplicationManager().getBean(AvroComponent.class);
       try {
         ExampleClient example =
             avroComponent.client(ExampleClient.class, new URL("http://localhost:3333/example"));
@@ -107,8 +106,7 @@ public class IntegrationTest {
   @Test
   public void testPointsBinaryRequest() {
     running(testServer(3333), () -> {
-      AvroComponent avroComponent = ApplicationManager.getApplicationManager().getBean(
-          AvroComponent.class);
+      AvroComponent avroComponent = SpringModule.getApplicationManager().getBean(AvroComponent.class);
       try {
         Points points = avroComponent.client(Points.class, new URL("http://localhost:3333/points"));
         Point center = Point.newBuilder().setX(0.0).setY(0.0).build();
@@ -173,8 +171,7 @@ public class IntegrationTest {
   @Test
   public void testPointsBinaryRequestAsync() {
     running(testServer(3333), () -> {
-      AvroComponent avroComponent = ApplicationManager.getApplicationManager().getBean(
-          AvroComponent.class);
+      AvroComponent avroComponent = SpringModule.getApplicationManager().getBean(AvroComponent.class);
       try {
         PointsClient points =
             avroComponent.client(PointsClient.class, new URL("http://localhost:3333/points"));

@@ -25,7 +25,7 @@
     <constructor-arg value="${mongodb-example.db-port}" />
   </bean>
 
-  <bean class="me.tfeng.playmods.mongodb.OplogListener">
+  <bean class="me.tfeng.toolbox.mongodb.OplogListener">
     <property name="mongoClient" ref="mongoClient" />
     <property name="namespace" value="${mongodb-example.db-name}.${mongodb-example.db-collection}" />
     <property name="handler" ref="statusReporter" />

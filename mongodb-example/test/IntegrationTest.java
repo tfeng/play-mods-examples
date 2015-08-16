@@ -31,7 +31,7 @@ import org.junit.Test;
 
 import controllers.protocols.Point;
 import controllers.protocols.Points;
-import me.tfeng.playmods.avro.AvroHelper;
+import me.tfeng.toolbox.avro.AvroHelper;
 import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
 
@@ -65,9 +65,8 @@ public class IntegrationTest {
             .setContentType("avro/json").post("{\"from\": {\"x\": 0.0, \"y\": 0.0}, \"k\": 1}")
             .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
-        nearestPoints =
-            AvroHelper.toRecord(Points.PROTOCOL.getMessages().get("getNearestPoints").getResponse(),
-                response.getBody());
+        nearestPoints = AvroHelper.toRecord(Points.PROTOCOL.getMessages().get("getNearestPoints").getResponse(),
+            response.getBody());
         assertThat(nearestPoints.size(), is(1));
         assertThat(nearestPoints.get(0).getX(), is(1.0));
         assertThat(nearestPoints.get(0).getY(), is(2.0));

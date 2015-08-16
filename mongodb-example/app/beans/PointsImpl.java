@@ -19,7 +19,7 @@ import com.mongodb.client.MongoCollection;
 import controllers.protocols.KTooLargeError;
 import controllers.protocols.Point;
 import controllers.protocols.Points;
-import me.tfeng.playmods.mongodb.RecordConverter;
+import me.tfeng.toolbox.mongodb.RecordConverter;
 
 @Component("points")
 public class PointsImpl implements InitializingBean, Points {
