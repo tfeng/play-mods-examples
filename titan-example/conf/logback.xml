@@ -23,7 +23,7 @@
 
   <logger name="application" level="WARN" />
 
-  <logger name="me.tfeng.playmods.titan" level="DEBUG" />
+  <logger name="me.tfeng.toolbox.titan" level="DEBUG" />
 
   <!-- Off these ones as they are annoying, and anyway we manage configuration ourself -->
   <logger name="com.avaje.ebean.config.PropertyMapLoader" level="OFF" />

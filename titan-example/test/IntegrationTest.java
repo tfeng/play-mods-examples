@@ -71,19 +71,19 @@ public class IntegrationTest {
       try {
         WSResponse response;
 
-        response = createPerson("a", 30);
+        response = createPerson("amy", 30);
         assertThat(response.getStatus(), is(200));
         assertThat(response.getBody(), isEmptyString());
 
-        response = createPerson("b", 35);
+        response = createPerson("brian", 35);
         assertThat(response.getStatus(), is(200));
         assertThat(response.getBody(), isEmptyString());
 
-        response = createPerson("c", 40);
+        response = createPerson("catherine", 40);
         assertThat(response.getStatus(), is(200));
         assertThat(response.getBody(), isEmptyString());
 
-        response = createPerson("d", 50);
+        response = createPerson("dave", 50);
         assertThat(response.getStatus(), is(200));
         assertThat(response.getBody(), isEmptyString());
 
@@ -93,19 +93,20 @@ public class IntegrationTest {
 
         response = queryBetweenAges(null, null);
         assertThat(response.getStatus(), is(200));
-        assertThat(response.getBody(), is("The following person(s) are between 0 and 120: a, b, c, d.\n"));
+        assertThat(response.getBody(),
+            is("The following person(s) are between 0 and 120: amy, brian, catherine, dave.\n"));
 
         response = queryBetweenAges(null, 30);
         assertThat(response.getStatus(), is(200));
-        assertThat(response.getBody(), is("The following person(s) are between 0 and 30: a.\n"));
+        assertThat(response.getBody(), is("The following person(s) are between 0 and 30: amy.\n"));
 
         response = queryBetweenAges(40, null);
         assertThat(response.getStatus(), is(200));
-        assertThat(response.getBody(), is("The following person(s) are between 40 and 120: c, d.\n"));
+        assertThat(response.getBody(), is("The following person(s) are between 40 and 120: catherine, dave.\n"));
 
         response = queryBetweenAges(50, 50);
         assertThat(response.getStatus(), is(200));
-        assertThat(response.getBody(), is("The following person(s) are between 50 and 50: d.\n"));
+        assertThat(response.getBody(), is("The following person(s) are between 50 and 50: dave.\n"));
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -134,11 +135,7 @@ public class IntegrationTest {
         assertThat(response.getStatus(), is(200));
         assertThat(response.getBody(), isEmptyString());
 
-        response = createPerson("emma", 15);
-        assertThat(response.getStatus(), is(200));
-        assertThat(response.getBody(), isEmptyString());
-
-        response = setFriend("amy", "brian");
+        response = setFriend("amy", "brian", 5);
         assertThat(response.getStatus(), is(200));
         assertThat(response.getBody(), isEmptyString());
 
@@ -149,6 +146,110 @@ public class IntegrationTest {
         response = getFriends("brian");
         assertThat(response.getStatus(), is(200));
         assertThat(response.getBody(), is("The following person(s) are friends of brian: amy.\n"));
+
+        response = setFriend("amy", "catherine", 10);
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(), isEmptyString());
+
+        response = getFriends("amy");
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(), is("The following person(s) are friends of amy: catherine, brian.\n"));
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    });
+  }
+
+  @Test
+  public void testMoreFriends() {
+    running(testServer(3333), () -> {
+      try {
+        WSResponse response;
+
+        response = createPerson("amy", 12);
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(), isEmptyString());
+
+        response = createPerson("brian", 13);
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(), isEmptyString());
+
+        response = createPerson("catherine", 40);
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(), isEmptyString());
+
+        response = createPerson("dave", 14);
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(), isEmptyString());
+
+        response = setFriend("amy", "brian", 5);
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(), isEmptyString());
+
+        response = setFriend("brian", "catherine", 10);
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(), isEmptyString());
+
+        response = setFriend("brian", "dave", 20);
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(), isEmptyString());
+
+        response = getMoreFriends("amy");
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(),
+            is("The following person(s) are more friends of amy: brian, dave, catherine.\n"));
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    });
+  }
+
+  @Test
+  public void testEnemies() {
+    running(testServer(3333), () -> {
+      try {
+        WSResponse response;
+
+        response = createPerson("amy", 12);
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(), isEmptyString());
+
+        response = createPerson("brian", 13);
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(), isEmptyString());
+
+        response = createPerson("catherine", 40);
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(), isEmptyString());
+
+        response = createPerson("dave", 14);
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(), isEmptyString());
+
+        response = createPerson("emma", 15);
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(), isEmptyString());
+
+        response = setFriend("amy", "brian", 5);
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(), isEmptyString());
+
+        response = setFriend("brian", "catherine", 10);
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(), isEmptyString());
+
+        response = setEnemy("amy", "dave", 20);
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(), isEmptyString());
+
+        response = setEnemy("dave", "emma", 1);
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(), isEmptyString());
+
+        response = getMoreFriends("amy");
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getBody(),
+            is("The following person(s) are more friends of amy: brian, catherine, emma.\n"));
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -188,6 +289,13 @@ public class IntegrationTest {
         .get(TIMEOUT);
   }
 
+  private WSResponse getMoreFriends(String name) {
+    return WS.url("http://localhost:3333/getMoreFriends")
+        .setQueryParameter("name", name)
+        .get()
+        .get(TIMEOUT);
+  }
+
   private WSResponse queryBetweenAges(Integer min, Integer max) {
     WSRequest request = WS.url("http://localhost:3333/betweenAges");
     if (min != null) {
@@ -199,18 +307,20 @@ public class IntegrationTest {
     return request.get().get(TIMEOUT);
   }
 
-  private WSResponse setEnemy(String name1, String name2) {
+  private WSResponse setEnemy(String name1, String name2, int strength) {
     return WS.url("http://localhost:3333/setEnemy")
         .setQueryParameter("name1", name1)
         .setQueryParameter("name2", name2)
+        .setQueryParameter("strength", Integer.toString(strength))
         .get()
         .get(TIMEOUT);
   }
 
-  private WSResponse setFriend(String name1, String name2) {
+  private WSResponse setFriend(String name1, String name2, int strength) {
     return WS.url("http://localhost:3333/setFriend")
         .setQueryParameter("name1", name1)
         .setQueryParameter("name2", name2)
+        .setQueryParameter("strength", Integer.toString(strength))
         .get()
         .get(TIMEOUT);
   }

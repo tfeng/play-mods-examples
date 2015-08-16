@@ -7,15 +7,6 @@
                            http://www.springframework.org/schema/context
                            http://www.springframework.org/schema/context/spring-context.xsd">
 
-  <context:annotation-config />
-
-  <context:component-scan base-package="beans, controllers" />
-
   <context:property-placeholder location="mongodb.properties, test.properties, titan.properties" />
-
-  <bean id="play-mods.titan.mongo-client" class="com.mongodb.MongoClient">
-    <constructor-arg value="${titan-example.db-host}" />
-    <constructor-arg value="${titan-example.db-port}" />
-  </bean>
 
 </beans>

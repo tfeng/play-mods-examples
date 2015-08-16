@@ -13,9 +13,26 @@
 
   <context:property-placeholder location="mongodb.properties, titan.properties" />
 
-  <bean id="play-mods.titan.mongo-client" class="com.mongodb.MongoClient">
+  <bean id="titan-example.mongo-client" class="com.mongodb.MongoClient">
     <constructor-arg value="${titan-example.db-host}" />
     <constructor-arg value="${titan-example.db-port}" />
+  </bean>
+
+  <bean id="titan-example.titan-graph" class="me.tfeng.toolbox.titan.mongodb.TitanGraphFactory">
+    <property name="dbName" value="${titan-example.db-name}"/>
+    <property name="mongoClient" ref="titan-example.mongo-client"/>
+    <property name="properties">
+      <map>
+        <entry key="ids.num-partitions">
+          <value type="java.lang.Integer">${titan-example.ids.num-partitions}</value>
+        </entry>
+        <entry key="ids.authority.wait-time">
+          <bean class="java.time.Duration" factory-method="ofMillis">
+            <constructor-arg value="${titan-example.ids.authority.wait-time}"/>
+          </bean>
+        </entry>
+      </map>
+    </property>
   </bean>
 
 </beans>

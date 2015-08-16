@@ -20,8 +20,6 @@
 
 package beans;
 
-import java.time.Duration;
-
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -33,13 +31,10 @@ import org.springframework.stereotype.Component;
 import com.mongodb.MongoClient;
 import com.thinkaurelius.titan.core.EdgeLabel;
 import com.thinkaurelius.titan.core.PropertyKey;
-import com.thinkaurelius.titan.core.TitanFactory;
 import com.thinkaurelius.titan.core.TitanGraph;
 import com.thinkaurelius.titan.core.schema.TitanManagement;
 
 import me.tfeng.playmods.spring.Startable;
-import me.tfeng.playmods.titan.MongoDbIndexProvider;
-import me.tfeng.playmods.titan.MongoDbStoreManager;
 import play.Logger;
 import play.Logger.ALogger;
 
@@ -51,23 +46,19 @@ public class TitanServer implements Startable {
 
   private static final ALogger LOG = Logger.of(TitanServer.class);
 
-  private TitanGraph graph;
-
-  @Value("${ids.authority.wait-time}")
-  private long idsAuthorityWaitTime;
-
-  @Value("${ids.num-partitions}")
-  private int idsNumPartitions;
-
-  @Value("${titan-example.reset-data:false}")
-  private boolean resetData;
-
-  @Value("${play-mods.titan.mongo-db-name}")
+  @Value("${titan-example.db-name}")
   private String dbName;
 
   @Autowired
-  @Qualifier("play-mods.titan.mongo-client")
+  @Qualifier("titan-example.titan-graph")
+  private TitanGraph graph;
+
+  @Autowired
+  @Qualifier("titan-example.mongo-client")
   private MongoClient mongoClient;
+
+  @Value("${titan-example.reset-data:false}")
+  private boolean resetData;
 
   public TitanGraph getGraph() {
     return graph;
@@ -79,12 +70,6 @@ public class TitanServer implements Startable {
       mongoClient.getDatabase(dbName).drop();
     }
 
-    graph = TitanFactory.build()
-        .set("storage.backend", MongoDbStoreManager.class.getName())
-        .set("index.search.backend", MongoDbIndexProvider.class.getName())
-        .set("ids.num-partitions", idsNumPartitions)
-        .set("ids.authority.wait-time", Duration.ofMillis(idsAuthorityWaitTime))
-        .open();
     LOG.info("Titan graph opened");
 
     TitanManagement management = graph.openManagement();

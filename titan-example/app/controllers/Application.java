@@ -99,19 +99,19 @@ public class Application extends Controller {
               local(bothE("friend").order().by("strength", Order.decr)).otherV()
                   .union(__(), local(bothE("friend").order().by("strength", Order.decr)).otherV()),
               local(bothE("enemy").order().by("strength", Order.decr)).otherV()
-                  .union(__(), local(bothE("enemy").order().by("strength", Order.decr)).otherV()))
+                  .local(bothE("enemy").order().by("strength", Order.decr)).otherV())
           .dedup()
           .where(P.neq("source"))
           .values("name");
       if (names.hasNext()) {
         StringBuffer buffer = new StringBuffer();
-        buffer.append("The following person(s) are friends of " + name + ": ");
+        buffer.append("The following person(s) are more friends of " + name + ": ");
         names.forEachRemaining(friendName -> buffer.append(friendName + ", "));
         return Results.ok(buffer.substring(0, buffer.length() - 2) + ".\n");
       }
       return Results.ok("No one is friend of " + name + ".\n");
     } catch (Exception e) {
-      LOG.error("Unable to find friends", e);
+      LOG.error("Unable to find more friends", e);
       return Results.badRequest();
     } finally {
       transaction.close();
