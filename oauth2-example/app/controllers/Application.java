@@ -44,8 +44,7 @@ public class Application extends Controller {
   public Promise<Result> userDetails() {
     String username = SecurityContextHolder.getContext().getAuthentication().getName();
     ObjectNode json = Json.newObject();
-    json.setAll(ImmutableMap.of(
-        "username", json.textNode(username), "isActive", json.booleanNode(true)));
+    json.setAll(ImmutableMap.of("username", json.textNode(username), "isActive", json.booleanNode(true)));
     return Promise.pure(ok(json));
   }
 }

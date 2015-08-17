@@ -58,11 +58,8 @@ public class AuthenticationManagerImpl implements AuthenticationManagerClient {
   public Promise<Authentication> authenticate(String token) {
     ExecutionContext executionContext = Akka.system().dispatchers().lookup(executionContextId);
     return Promise.promise(() -> {
-      PreAuthenticatedAuthenticationToken authRequest =
-          new PreAuthenticatedAuthenticationToken(token.toString(), "");
-      OAuth2Authentication authResult =
-          (OAuth2Authentication) authenticationManager.authenticate(authRequest);
-
+      PreAuthenticatedAuthenticationToken authRequest = new PreAuthenticatedAuthenticationToken(token.toString(), "");
+      OAuth2Authentication authResult = (OAuth2Authentication) authenticationManager.authenticate(authRequest);
       Authentication authentication = new Authentication();
       authentication.setClient(getClientAuthentication(authResult.getOAuth2Request()));
       authentication.setUser(getUserAuthentication(authResult.getUserAuthentication()));
@@ -72,7 +69,8 @@ public class AuthenticationManagerImpl implements AuthenticationManagerClient {
 
   private ClientAuthentication getClientAuthentication(OAuth2Request request) {
     List<String> authorities = request.getAuthorities().stream()
-        .map(authority -> authority.getAuthority()).collect(Collectors.toList());
+        .map(authority -> authority.getAuthority())
+        .collect(Collectors.toList());
     List<String> scopes = new ArrayList<>(request.getScope());
     ClientAuthentication client = new ClientAuthentication();
     client.setId(request.getClientId());
@@ -87,7 +85,8 @@ public class AuthenticationManagerImpl implements AuthenticationManagerClient {
       return null;
     } else {
       List<String> authorities = authentication.getAuthorities().stream()
-          .map(authority -> authority.getAuthority()).collect(Collectors.toList());
+          .map(authority -> authority.getAuthority())
+          .collect(Collectors.toList());
       UserAuthentication user = new UserAuthentication();
       user.setId(authentication.getName());
       user.setAuthorities(authorities);

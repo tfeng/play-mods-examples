@@ -81,8 +81,8 @@ public class SparkAppStartable implements Startable {
         sparkContext.accumulable(Maps.newHashMap(), new AccumulableLongMap());
 
     Map<String, Integer> topicMap = Collections.singletonMap(kafkaTopic, 1);
-    JavaPairReceiverInputDStream<String, String> stream = KafkaUtils.createStream(streamingContext,
-        zkConnect, kafkaGroupId, topicMap);
+    JavaPairReceiverInputDStream<String, String> stream = KafkaUtils.createStream(streamingContext, zkConnect,
+        kafkaGroupId, topicMap);
     JavaDStream<String> words = stream.flatMap(s -> Lists.newArrayList(s._2().split(" ")));
     JavaPairDStream<String, Long> wordCounts =
         words.mapToPair(s -> new Tuple2<>(s, 1l)).reduceByKey((i1, i2) -> i1 + i2);
@@ -99,6 +99,5 @@ public class SparkAppStartable implements Startable {
   @Override
   public void onStop() throws Throwable {
     streamingContext.stop();
-
   }
 }

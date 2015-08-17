@@ -56,47 +56,55 @@ public class IntegrationTest {
       try {
         WSResponse response = WS.url("http://localhost:" + PORT + "/current/countEmployees")
             .setHeader("Content-Type", "avro/json")
-            .post("").get(TIMEOUT);
+            .post("")
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
         assertThat(Integer.parseInt(response.getBody()), is(0));
 
         response = WS.url("http://localhost:" + PORT + "/current/addEmployee")
             .setHeader("Content-Type", "avro/json")
-            .post("{\"employee\": {\"firstName\": \"Thomas\", \"lastName\": \"Feng\", \"gender\": \"MALE\", \"dateOfBirth\": {\"year\": 2000, \"month\": 1, \"day\": 1}}}").get(TIMEOUT);
+            .post("{\"employee\": {\"firstName\": \"Thomas\", \"lastName\": \"Feng\", \"gender\": \"MALE\", \"dateOfBirth\": {\"year\": 2000, \"month\": 1, \"day\": 1}}}")
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
         assertThat(Long.parseLong(response.getBody()), is(1l));
 
         response = WS.url("http://localhost:" + PORT + "/current/addEmployee")
             .setHeader("Content-Type", "avro/json")
-            .post("{\"employee\": {\"firstName\": \"Jackson\", \"lastName\": \"Wang\", \"gender\": \"MALE\", \"dateOfBirth\": {\"year\": 2001, \"month\": 5, \"day\": 15}}}").get(TIMEOUT);
+            .post("{\"employee\": {\"firstName\": \"Jackson\", \"lastName\": \"Wang\", \"gender\": \"MALE\", \"dateOfBirth\": {\"year\": 2001, \"month\": 5, \"day\": 15}}}")
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
         assertThat(Long.parseLong(response.getBody()), is(2l));
 
         response = WS.url("http://localhost:" + PORT + "/current/addEmployee")
             .setHeader("Content-Type", "avro/json")
-            .post("{\"employee\": {\"firstName\": \"Christine\", \"lastName\": \"Lee\", \"gender\": \"FEMALE\", \"dateOfBirth\": {\"year\": 2000, \"month\": 8, \"day\": 20}}}").get(TIMEOUT);
+            .post("{\"employee\": {\"firstName\": \"Christine\", \"lastName\": \"Lee\", \"gender\": \"FEMALE\", \"dateOfBirth\": {\"year\": 2000, \"month\": 8, \"day\": 20}}}")
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
         assertThat(Long.parseLong(response.getBody()), is(3l));
 
         response = WS.url("http://localhost:" + PORT + "/current/countEmployees")
             .setHeader("Content-Type", "avro/json")
-            .post("").get(TIMEOUT);
+            .post("")
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
         assertThat(Integer.parseInt(response.getBody()), is(3));
 
         response = WS.url("http://localhost:" + PORT + "/current/makeManager")
             .setHeader("Content-Type", "avro/json")
-            .post("{\"managerId\": 1, \"employeeId\": 2}").get(TIMEOUT);
+            .post("{\"managerId\": 1, \"employeeId\": 2}")
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
 
         response = WS.url("http://localhost:" + PORT + "/current/makeManager")
             .setHeader("Content-Type", "avro/json")
-            .post("{\"managerId\": 1, \"employeeId\": 3}").get(TIMEOUT);
+            .post("{\"managerId\": 1, \"employeeId\": 3}")
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
 
         response = WS.url("http://localhost:" + PORT + "/current/getEmployees")
             .setHeader("Content-Type", "avro/json")
-            .post("{\"managerId\": 1}").get(TIMEOUT);
+            .post("{\"managerId\": 1}")
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
         assertThat(response.getBody(),
             is("[{\"id\":2,\"firstName\":\"Jackson\",\"lastName\":\"Wang\",\"gender\":\"MALE\",\"dateOfBirth\":{\"year\":2001,\"month\":5,\"day\":15}},{\"id\":3,\"firstName\":\"Christine\",\"lastName\":\"Lee\",\"gender\":\"FEMALE\",\"dateOfBirth\":{\"year\":2000,\"month\":8,\"day\":20}}]"));
@@ -110,7 +118,8 @@ public class IntegrationTest {
 
         response = WS.url("http://localhost:" + PORT + "/current/getManager")
             .setHeader("Content-Type", "avro/json")
-            .post("{\"employeeId\": 3}").get(TIMEOUT);
+            .post("{\"employeeId\": 3}")
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
         assertThat(response.getBody(),
             is("{\"id\":1,\"firstName\":\"Thomas\",\"lastName\":\"Feng\",\"gender\":\"MALE\",\"dateOfBirth\":{\"year\":2000,\"month\":1,\"day\":1}}"));
@@ -124,63 +133,68 @@ public class IntegrationTest {
   public void testD2RequestWithLegacyProtocol() {
     running(testServer(PORT), () -> {
       try {
-        WSResponse response = WS.url("http://localhost:" + PORT + "/legacy/countEmployees")
-            .get().get(TIMEOUT);
+        WSResponse response = WS.url("http://localhost:" + PORT + "/legacy/countEmployees").get().get(TIMEOUT);
         assertThat(response.getStatus(), is(400));
 
         response = WS.url("http://localhost:" + PORT + "/legacy/addEmployee")
             .setQueryParameter("firstName", "Thomas")
             .setQueryParameter("lastName", "Feng")
-            .get().get(TIMEOUT);
+            .get()
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
         assertThat(Long.parseLong(response.getBody()), is(1l));
 
         response = WS.url("http://localhost:" + PORT + "/legacy/addEmployee")
             .setQueryParameter("firstName", "Jackson")
             .setQueryParameter("lastName", "Wang")
-            .get().get(TIMEOUT);
+            .get()
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
         assertThat(Long.parseLong(response.getBody()), is(2l));
 
         response = WS.url("http://localhost:" + PORT + "/legacy/addEmployee")
             .setQueryParameter("firstName", "Christine")
             .setQueryParameter("lastName", "Lee")
-            .get().get(TIMEOUT);
+            .get()
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
         assertThat(Long.parseLong(response.getBody()), is(3l));
 
         response = WS.url("http://localhost:" + PORT + "/legacy/makeManager")
             .setQueryParameter("managerId", "1")
             .setQueryParameter("employeeId", "2")
-            .get().get(TIMEOUT);
+            .get()
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
 
         response = WS.url("http://localhost:" + PORT + "/legacy/makeManager")
             .setQueryParameter("managerId", "1")
             .setQueryParameter("employeeId", "3")
-            .get().get(TIMEOUT);
+            .get()
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
 
         response = WS.url("http://localhost:" + PORT + "/legacy/getEmployees")
             .setQueryParameter("managerId", "1")
-            .get().get(TIMEOUT);
+            .get()
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
         assertThat(response.getBody(),
             is("[{\"id\": 2, \"firstName\": \"Jackson\", \"lastName\": \"Wang\"}, {\"id\": 3, \"firstName\": \"Christine\", \"lastName\": \"Lee\"}]"));
 
         response = WS.url("http://localhost:" + PORT + "/legacy/getManager")
             .setQueryParameter("employeeId", "2")
-            .get().get(TIMEOUT);
+            .get()
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
-        assertThat(response.getBody(),
-            is("{\"id\": 1, \"firstName\": \"Thomas\", \"lastName\": \"Feng\"}"));
+        assertThat(response.getBody(), is("{\"id\": 1, \"firstName\": \"Thomas\", \"lastName\": \"Feng\"}"));
 
         response = WS.url("http://localhost:" + PORT + "/legacy/getManager")
             .setQueryParameter("employeeId", "3")
-            .get().get(TIMEOUT);
+            .get()
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
-        assertThat(response.getBody(),
-            is("{\"id\": 1, \"firstName\": \"Thomas\", \"lastName\": \"Feng\"}"));
+        assertThat(response.getBody(), is("{\"id\": 1, \"firstName\": \"Thomas\", \"lastName\": \"Feng\"}"));
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -191,10 +205,8 @@ public class IntegrationTest {
   public void testDirectRequest() {
     running(testServer(PORT), () -> {
       try {
-        HttpTransceiver transceiver =
-            new HttpTransceiver(new URL("http://localhost:" + PORT + "/employeeRegistry"));
-        EmployeeRegistry registry =
-            SpecificRequestor.getClient(EmployeeRegistry.class, transceiver);
+        HttpTransceiver transceiver = new HttpTransceiver(new URL("http://localhost:" + PORT + "/employeeRegistry"));
+        EmployeeRegistry registry = SpecificRequestor.getClient(EmployeeRegistry.class, transceiver);
 
         assertThat(registry.countEmployees(), is(0));
 
@@ -209,17 +221,13 @@ public class IntegrationTest {
         Employee christine = getEmployee("Christine", "Lee", true);
         christine.setId(registry.addEmployee(christine));
         assertThat(christine.getId(), is(3l));
-
         assertThat(registry.countEmployees(), is(3));
 
         registry.makeManager(thomas.getId(), jackson.getId());
-
         registry.makeManager(thomas.getId(), christine.getId());
 
         assertThat(registry.getEmployees(thomas.getId()), is(ImmutableList.of(jackson, christine)));
-
         assertThat(registry.getManager(jackson.getId()), is(thomas));
-
         assertThat(registry.getManager(christine.getId()), is(thomas));
       } catch (Exception e) {
         throw new RuntimeException(e);

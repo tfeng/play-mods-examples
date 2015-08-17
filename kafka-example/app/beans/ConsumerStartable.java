@@ -22,18 +22,20 @@ package beans;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.DependsOn;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import controllers.protocols.UserMessage;
+import kafka.consumer.Consumer;
+import kafka.consumer.ConsumerConfig;
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
 import kafka.javaapi.consumer.ConsumerConnector;
-import me.tfeng.playmods.kafka.KafkaComponent;
 import me.tfeng.toolbox.avro.AvroHelper;
 import me.tfeng.toolbox.spring.ExtendedStartable;
 import play.Logger;
@@ -61,8 +63,7 @@ public class ConsumerStartable implements ExtendedStartable {
       ConsumerIterator<byte[], byte[]> iterator = stream.iterator();
       while (iterator.hasNext()) {
         try {
-          UserMessage message =
-              AvroHelper.decodeRecord(UserMessage.class, iterator.next().message());
+          UserMessage message = AvroHelper.decodeRecord(UserMessage.class, iterator.next().message());
           LOG.info("Consuming message: " + message);
         } catch (Throwable t) {
           LOG.error("Unable to consume message", t);
@@ -74,16 +75,16 @@ public class ConsumerStartable implements ExtendedStartable {
   private ConsumerConnector consumer;
 
   @Autowired
-  private KafkaComponent kafkaComponent;
+  @Qualifier("kafka-example.consumer-properties")
+  private Properties consumerProperties;
 
   private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
   @Override
   public void afterStart() {
-    consumer = kafkaComponent.createConsumerConnector();
+    consumer = Consumer.createJavaConsumerConnector(new ConsumerConfig(consumerProperties));
     List<KafkaStream<byte[], byte[]>> streams =
-        consumer.createMessageStreams(Collections.singletonMap(Constants.TOPIC, 1))
-            .get(Constants.TOPIC);
+        consumer.createMessageStreams(Collections.singletonMap(Constants.TOPIC, 1)).get(Constants.TOPIC);
     for (KafkaStream<byte[], byte[]> stream : streams) {
       scheduler.execute(new ConsumerRunnable(stream));
     }

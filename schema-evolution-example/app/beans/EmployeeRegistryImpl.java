@@ -41,11 +41,11 @@ import controllers.protocols.EmployeeRegistry;
 @Component("employeeRegistry")
 public class EmployeeRegistryImpl implements EmployeeRegistry {
 
+  private long currentEmployeeId = 0;
+
   private final Map<Long, Employee> employees = Maps.newHashMap();
 
   private final Multimap<Long, Long> management = ArrayListMultimap.create();
-
-  private long currentEmployeeId = 0;
 
   @Override
   public long addEmployee(Employee employee) {
@@ -82,8 +82,7 @@ public class EmployeeRegistryImpl implements EmployeeRegistry {
 
   @Override
   public Void removeEmployee(long employeeId) {
-    for (Iterator<Entry<Long, Long>> iterator = management.entries().iterator();
-         iterator.hasNext();) {
+    for (Iterator<Entry<Long, Long>> iterator = management.entries().iterator(); iterator.hasNext();) {
       if (iterator.next().getValue().equals(employeeId)) {
         iterator.remove();
       }

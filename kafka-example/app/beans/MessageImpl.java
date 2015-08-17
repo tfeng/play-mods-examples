@@ -24,8 +24,10 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Maps;
@@ -35,7 +37,7 @@ import controllers.protocols.RequestHeader;
 import controllers.protocols.UserMessage;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
-import me.tfeng.playmods.kafka.KafkaComponent;
+import kafka.producer.ProducerConfig;
 import play.Logger;
 import play.Logger.ALogger;
 import play.mvc.Controller;
@@ -50,20 +52,20 @@ public class MessageImpl implements Message {
 
   private static final ALogger LOG = Logger.of(MessageImpl.class);
 
-  @Autowired
-  private KafkaComponent kafkaComponent;
+  @Autowired(required = false)
+  @Qualifier("kafka-example.producer-properties")
+  private Properties producerProperties;
 
   private Producer<String, UserMessage> producer;
 
   @Override
   public Void send(UserMessage message) {
     if (producer == null) {
-      producer = kafkaComponent.createProducer();
+      producer = new Producer<>(new ProducerConfig(producerProperties));
     }
 
     Request request = Controller.request();
-    Map<String, List<String>> query =
-        Maps.transformValues(request.queryString(), value -> Arrays.asList(value));
+    Map<String, List<String>> query = Maps.transformValues(request.queryString(), value -> Arrays.asList(value));
     RequestHeader header = RequestHeader.newBuilder()
         .setRemoteAddress(request.remoteAddress())
         .setHost(request.host())
@@ -78,8 +80,7 @@ public class MessageImpl implements Message {
     LOG.info("Producing message: " + message);
 
     try {
-      producer.send(new KeyedMessage<String, UserMessage>(Constants.TOPIC, message.getSubject(),
-          message));
+      producer.send(new KeyedMessage<String, UserMessage>(Constants.TOPIC, message.getSubject(), message));
       return null;
     } catch (Exception e) {
       throw new RuntimeException("Unable to send Kafka event for message: " + message, e);

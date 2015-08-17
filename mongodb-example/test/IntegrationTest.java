@@ -107,9 +107,8 @@ public class IntegrationTest {
             .setContentType("avro/json").post("{\"from\": {\"x\": 0.0, \"y\": 0.0}, \"k\": 3}")
             .get(TIMEOUT);
         assertThat(response.getStatus(), is(200));
-        nearestPoints =
-            AvroHelper.toRecord(Points.PROTOCOL.getMessages().get("getNearestPoints").getResponse(),
-                response.getBody());
+        nearestPoints = AvroHelper.toRecord(Points.PROTOCOL.getMessages().get("getNearestPoints").getResponse(),
+            response.getBody());
         assertThat(nearestPoints.size(), is(3));
 
         assertThat(nearestPoints.get(0).getX(), is(1.0));

@@ -59,10 +59,6 @@ import play.mvc.Result;
 @BodyParser.Of(BodyParser.Json.class)
 public class AuthenticationController extends Controller {
 
-  public AuthenticationController() {
-    int i = 0;
-  }
-
   @Autowired
   @Qualifier("oauth2-example.client-authentication-manager")
   private AuthenticationManager clientAuthenticationManager;
@@ -79,18 +75,20 @@ public class AuthenticationController extends Controller {
   @Qualifier("oauth2-example.token-services")
   private AuthorizationServerTokenServices tokenServices;
 
+  public AuthenticationController() {
+  }
+
   public Promise<Result> authenticateClient() {
     JsonNode json = request().body().asJson();
     String clientId = json.findPath("clientId").textValue();
     String clientSecret = json.findPath("clientSecret").textValue();
 
-    UsernamePasswordAuthenticationToken authRequest =
-        new UsernamePasswordAuthenticationToken(clientId, clientSecret);
+    UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(clientId, clientSecret);
     clientAuthenticationManager.authenticate(authRequest);
 
     ClientDetails clientDetails = clientDetailsService.loadClientByClientId(clientId);
-    TokenRequest tokenRequest = new TokenRequest(Collections.emptyMap(), clientId,
-        clientDetails.getScope(), "password");
+    TokenRequest tokenRequest =
+        new TokenRequest(Collections.emptyMap(), clientId, clientDetails.getScope(), "password");
     OAuth2AccessToken token = tokenGranter.grant("client_credentials", tokenRequest);
 
     ObjectNode result = Json.newObject();
@@ -109,14 +107,12 @@ public class AuthenticationController extends Controller {
 
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     OAuth2Request clientAuthenticationRequest =
-        ((org.springframework.security.oauth2.provider.OAuth2Authentication) authentication)
-            .getOAuth2Request();
+        ((org.springframework.security.oauth2.provider.OAuth2Authentication) authentication).getOAuth2Request();
     Map<String, String> requestParameters = new HashMap<>();
     requestParameters.put("username", username);
     requestParameters.put("password", password);
-    TokenRequest tokenRequest = new TokenRequest(requestParameters,
-            clientAuthenticationRequest.getClientId(), clientAuthenticationRequest.getScope(),
-            "password");
+    TokenRequest tokenRequest = new TokenRequest(requestParameters, clientAuthenticationRequest.getClientId(),
+        clientAuthenticationRequest.getScope(), "password");
     OAuth2AccessToken token = tokenGranter.grant("password", tokenRequest);
     ObjectNode result = Json.newObject();
     result.setAll(ImmutableMap.of(
@@ -134,11 +130,9 @@ public class AuthenticationController extends Controller {
 
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     OAuth2Request clientAuthenticationRequest =
-        ((org.springframework.security.oauth2.provider.OAuth2Authentication) authentication)
-            .getOAuth2Request();
-    TokenRequest tokenRequest =
-        new TokenRequest(Collections.emptyMap(), clientAuthenticationRequest.getClientId(),
-            clientAuthenticationRequest.getScope(), "refresh");
+        ((org.springframework.security.oauth2.provider.OAuth2Authentication) authentication).getOAuth2Request();
+    TokenRequest tokenRequest = new TokenRequest(Collections.emptyMap(), clientAuthenticationRequest.getClientId(),
+        clientAuthenticationRequest.getScope(), "refresh");
     OAuth2AccessToken token = tokenServices.refreshAccessToken(refreshToken, tokenRequest);
     ObjectNode result = Json.newObject();
     result.setAll(ImmutableMap.of(

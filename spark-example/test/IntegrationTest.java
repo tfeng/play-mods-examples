@@ -59,9 +59,10 @@ public class IntegrationTest {
     running(testServer(PORT), () -> {
       try {
         WS.url("http://localhost:" + PORT + "/add")
-            .setQueryParameter("message", "hello world thomas").get().get(TIMEOUT);
-        WS.url("http://localhost:" + PORT + "/add")
-            .setQueryParameter("message", "hello world amy").get().get(TIMEOUT);
+            .setQueryParameter("message", "hello world thomas")
+            .get()
+            .get(TIMEOUT);
+        WS.url("http://localhost:" + PORT + "/add").setQueryParameter("message", "hello world amy").get().get(TIMEOUT);
 
         while (true) {
           WSResponse response = WS.url("http://localhost:" + PORT + "/get").get().get(TIMEOUT);

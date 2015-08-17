@@ -50,7 +50,6 @@ import controllers.protocols.Points;
 import controllers.protocols.PointsClient;
 import me.tfeng.playmods.avro.AvroComponent;
 import me.tfeng.playmods.modules.SpringModule;
-import me.tfeng.toolbox.spring.ApplicationManager;
 import play.libs.F.Promise;
 
 /**
@@ -65,8 +64,7 @@ public class IntegrationTest {
     running(testServer(3333), () -> {
       AvroComponent avroComponent = SpringModule.getApplicationManager().getBean(AvroComponent.class);
       try {
-        Example example =
-            avroComponent.client(Example.class, new URL("http://localhost:3333/example"));
+        Example example = avroComponent.client(Example.class, new URL("http://localhost:3333/example"));
         assertThat(example.echo("Test Message"), is("Test Message"));
       } catch (Exception e) {
         throw new RuntimeException(e);
@@ -79,8 +77,7 @@ public class IntegrationTest {
     running(testServer(3333), () -> {
       AvroComponent avroComponent = SpringModule.getApplicationManager().getBean(AvroComponent.class);
       try {
-        ExampleClient example =
-            avroComponent.client(ExampleClient.class, new URL("http://localhost:3333/example"));
+        ExampleClient example = avroComponent.client(ExampleClient.class, new URL("http://localhost:3333/example"));
         Promise<String> promise = example.echo("Test Message");
         assertThat(promise.get(TIMEOUT), is("Test Message"));
       } catch (Exception e) {
@@ -93,9 +90,8 @@ public class IntegrationTest {
   public void testExampleJsonRequest() {
     running(testServer(3333), () -> {
       try {
-        Object response =
-            sendJsonRequest("http://localhost:3333/example", Example.PROTOCOL, "echo",
-                "{\"message\": \"Test Message\"}");
+        Object response = sendJsonRequest("http://localhost:3333/example", Example.PROTOCOL, "echo",
+            "{\"message\": \"Test Message\"}");
         assertThat(response, is("Test Message"));
       } catch (Exception e) {
         throw new RuntimeException(e);
@@ -173,8 +169,7 @@ public class IntegrationTest {
     running(testServer(3333), () -> {
       AvroComponent avroComponent = SpringModule.getApplicationManager().getBean(AvroComponent.class);
       try {
-        PointsClient points =
-            avroComponent.client(PointsClient.class, new URL("http://localhost:3333/points"));
+        PointsClient points = avroComponent.client(PointsClient.class, new URL("http://localhost:3333/points"));
         Point center = Point.newBuilder().setX(0.0).setY(0.0).build();
 
         // []
@@ -197,7 +192,8 @@ public class IntegrationTest {
             .map(response -> {
               assertThat(response, is(ImmutableList.of(one)));
               return null;
-            }).get(TIMEOUT);
+            })
+            .get(TIMEOUT);
         points.getNearestPoints(center, 2)
             .map(response -> {
               fail("KTooLargeError is expected");
@@ -207,7 +203,8 @@ public class IntegrationTest {
               assertThat(error, instanceOf(KTooLargeError.class));
               assertThat(((KTooLargeError) error).getK(), is(2));
               return null;
-            }).get(TIMEOUT);
+            })
+            .get(TIMEOUT);
 
         // [one, five]
         Point five = Point.newBuilder().setX(5.0).setY(5.0).build();
@@ -221,7 +218,8 @@ public class IntegrationTest {
             .map(response -> {
               assertThat(response, is(ImmutableList.of(one, five)));
               return null;
-            }).get(TIMEOUT);
+            })
+            .get(TIMEOUT);
         points.getNearestPoints(center, 3)
             .map(response -> {
               fail("KTooLargeError is expected");
@@ -231,7 +229,8 @@ public class IntegrationTest {
               assertThat(error, instanceOf(KTooLargeError.class));
               assertThat(((KTooLargeError) error).getK(), is(3));
               return null;
-            }).get(TIMEOUT);
+            })
+            .get(TIMEOUT);
 
         // [one, five, five]
         points.addPoint(five).get(TIMEOUT);
@@ -239,17 +238,20 @@ public class IntegrationTest {
             .map(response -> {
               assertThat(response, is(ImmutableList.of(one)));
               return null;
-            }).get(TIMEOUT);
+            })
+            .get(TIMEOUT);
         points.getNearestPoints(center, 2)
             .map(response -> {
               assertThat(response, is(ImmutableList.of(one, five)));
               return null;
-            }).get(TIMEOUT);
+            })
+            .get(TIMEOUT);
         points.getNearestPoints(center, 3)
             .map(response -> {
               assertThat(response, is(ImmutableList.of(one, five, five)));
               return null;
-            }).get(TIMEOUT);
+            })
+            .get(TIMEOUT);
         points.getNearestPoints(center, 4)
             .map(response -> {
               fail("KTooLargeError is expected");
@@ -259,7 +261,8 @@ public class IntegrationTest {
               assertThat(error, instanceOf(KTooLargeError.class));
               assertThat(((KTooLargeError) error).getK(), is(4));
               return null;
-            }).get(TIMEOUT);
+            })
+            .get(TIMEOUT);
 
         // []
         points.clear().get(TIMEOUT);
@@ -272,7 +275,8 @@ public class IntegrationTest {
               assertThat(error, instanceOf(KTooLargeError.class));
               assertThat(((KTooLargeError) error).getK(), is(1));
               return null;
-            }).get(TIMEOUT);
+            })
+            .get(TIMEOUT);
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -284,8 +288,8 @@ public class IntegrationTest {
     running(testServer(3333), () -> {
       try {
         String url = "http://localhost:3333/points";
-        GenericData.Record record = new GenericData.Record(Points.PROTOCOL.getMessages()
-            .get("getNearestPoints").getErrors().getTypes().get(1));
+        GenericData.Record record =
+            new GenericData.Record(Points.PROTOCOL.getMessages().get("getNearestPoints").getErrors().getTypes().get(1));
         Object response;
 
         // []
@@ -367,8 +371,8 @@ public class IntegrationTest {
     });
   }
 
-  private Object sendJsonRequest(String url, Protocol protocol, String message, String data)
-      throws URISyntaxException, IOException {
+  private Object sendJsonRequest(String url, Protocol protocol, String message, String data) throws URISyntaxException,
+      IOException {
     URI uri = new URL(url).toURI();
     Schema schema = protocol.getMessages().get(message).getRequest();
     GenericRequestor client = new GenericRequestor(protocol, Ipc.createTransceiver(uri));

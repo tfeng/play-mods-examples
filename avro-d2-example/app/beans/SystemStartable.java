@@ -40,7 +40,7 @@ import play.Logger.ALogger;
 /**
  * @author Thomas Feng (huining.feng@gmail.com)
  */
-@Component("systemStartable")
+@Component
 public class SystemStartable implements Startable {
 
   private static final ALogger LOG = Logger.of(SystemStartable.class);

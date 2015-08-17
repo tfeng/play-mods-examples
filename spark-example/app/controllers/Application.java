@@ -21,8 +21,10 @@
 package controllers;
 
 import java.util.Map;
+import java.util.Properties;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +33,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import beans.SparkAppStartable;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
-import me.tfeng.playmods.kafka.KafkaComponent;
+import kafka.producer.ProducerConfig;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -48,15 +50,16 @@ public class Application extends Controller {
   @Autowired
   private SparkAppStartable job;
 
-  @Autowired
-  private KafkaComponent kafkaComponent;
-
   @Value("${kafka.topic}")
   private String kafkaTopic;
 
+  @Autowired(required = false)
+  @Qualifier("spark-example.producer-properties")
+  private Properties producerProperties;
+
   public Result addMessage(String message) throws Exception {
     if (producer == null) {
-      producer = kafkaComponent.createProducer();
+      producer = new Producer<>(new ProducerConfig(producerProperties));
     }
     producer.send(new KeyedMessage<>(kafkaTopic, kafkaTopic, message));
     return Results.ok();

@@ -16,7 +16,7 @@
 
   <context:property-placeholder location="spark.properties" />
 
-  <util:properties id="play-mods.kafka.producer-properties" location="producer.properties" />
+  <util:properties id="spark-example.producer-properties" location="producer.properties" />
 
   <bean class="factories.SparkConfFactory">
     <property name="appName" value="${spark.app.name}" />

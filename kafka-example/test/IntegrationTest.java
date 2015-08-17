@@ -41,8 +41,8 @@ import kafka.consumer.KafkaStream;
 import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.serializer.StringDecoder;
 import me.tfeng.playmods.avro.AvroComponent;
-import me.tfeng.playmods.kafka.AvroDecoder;
 import me.tfeng.playmods.modules.SpringModule;
+import me.tfeng.toolbox.kafka.AvroDecoder;
 import utils.Constants;
 
 /**
@@ -59,8 +59,7 @@ public class IntegrationTest {
         Date beginning = new Date();
 
         Properties consumerProperties = new Properties();
-        InputStream propertiesStream =
-            getClass().getClassLoader().getResourceAsStream("test-consumer.properties");
+        InputStream propertiesStream = getClass().getClassLoader().getResourceAsStream("test-consumer.properties");
         consumerProperties.load(propertiesStream);
 
         ConsumerConnector consumer = Consumer.createJavaConsumerConnector(new ConsumerConfig(consumerProperties));
@@ -68,26 +67,29 @@ public class IntegrationTest {
             Collections.singletonMap(Constants.TOPIC, 1), new StringDecoder(null),
             new AvroDecoder<>(UserMessage.class)).get(Constants.TOPIC).get(0);
 
-        MessageClient client = getAvroComponent()
-            .client(MessageClient.class, new URL("http://localhost:3333/message"));
-        client.send(
-            UserMessage.newBuilder().setSubject("Raymond").setAction("reads").setObject("books")
-                .setRequestHeader(null).build()).get(TIMEOUT);
+        MessageClient client = getAvroComponent().client(MessageClient.class, new URL("http://localhost:3333/message"));
+        UserMessage messageOut = UserMessage.newBuilder()
+            .setSubject("Raymond")
+            .setAction("reads")
+            .setObject("books")
+            .setRequestHeader(null)
+            .build();
+        client.send(messageOut).get(TIMEOUT);
 
         ConsumerIterator<String, UserMessage> iterator = stream.iterator();
         assertThat(iterator.hasNext(), is(true));
 
-        UserMessage message = iterator.next().message();
-        assertThat(message.getSubject(), is("Raymond"));
-        assertThat(message.getAction(), is("reads"));
-        assertThat(message.getObject(), is("books"));
-        assertThat(message.getRequestHeader().getRemoteAddress(), is("127.0.0.1"));
-        assertThat(message.getRequestHeader().getHost(), is("localhost:3333"));
-        assertThat(message.getRequestHeader().getMethod(), is("POST"));
-        assertThat(message.getRequestHeader().getPath(), is("/message"));
-        assertThat(message.getRequestHeader().getQuery(), is(Collections.emptyMap()));
-        assertThat(message.getRequestHeader().getSecure(), is(false));
-        assertThat(message.getRequestHeader().getTimestamp(), greaterThan(beginning.getTime()));
+        UserMessage messageIn = iterator.next().message();
+        assertThat(messageIn.getSubject(), is("Raymond"));
+        assertThat(messageIn.getAction(), is("reads"));
+        assertThat(messageIn.getObject(), is("books"));
+        assertThat(messageIn.getRequestHeader().getRemoteAddress(), is("127.0.0.1"));
+        assertThat(messageIn.getRequestHeader().getHost(), is("localhost:3333"));
+        assertThat(messageIn.getRequestHeader().getMethod(), is("POST"));
+        assertThat(messageIn.getRequestHeader().getPath(), is("/message"));
+        assertThat(messageIn.getRequestHeader().getQuery(), is(Collections.emptyMap()));
+        assertThat(messageIn.getRequestHeader().getSecure(), is(false));
+        assertThat(messageIn.getRequestHeader().getTimestamp(), greaterThan(beginning.getTime()));
 
         consumer.shutdown();
       } catch (Exception e) {

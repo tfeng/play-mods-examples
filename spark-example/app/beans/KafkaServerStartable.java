@@ -35,7 +35,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import kafka.server.KafkaConfig;
-import me.tfeng.playmods.kafka.KafkaUtils;
+import me.tfeng.toolbox.kafka.KafkaUtils;
 import me.tfeng.toolbox.spring.Startable;
 import play.Logger;
 import play.Logger.ALogger;

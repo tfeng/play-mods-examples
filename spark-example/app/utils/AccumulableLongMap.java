@@ -31,8 +31,7 @@ import com.google.common.collect.Maps;
 /**
  * @author Thomas Feng (huining.feng@gmail.com)
  */
-public class AccumulableLongMap<K> extends HashMap<K, Long>
-    implements AccumulableParam<Map<K, Long>, Pair<K, Long>> {
+public class AccumulableLongMap<K> extends HashMap<K, Long> implements AccumulableParam<Map<K, Long>, Pair<K, Long>> {
 
   @Override
   public Map<K, Long> addAccumulator(Map<K, Long> map, Pair<K, Long> pair) {

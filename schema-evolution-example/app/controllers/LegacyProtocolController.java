@@ -47,9 +47,6 @@ import play.mvc.Results;
 @Component
 public class LegacyProtocolController {
 
-  @Autowired
-  private ClientFactory clientFactory;
-
   private static final JsonNodeFactory JSON_NODE_FACTORY = new JsonNodeFactory(false);
 
   private static final Protocol LEGACY_PROTOCOL;
@@ -58,12 +55,15 @@ public class LegacyProtocolController {
 
   static {
     try {
-      LEGACY_PROTOCOL = Protocol.parse(LegacyProtocolController.class.getResourceAsStream(
-          "/legacy/employee_registry.avpr"));
+      LEGACY_PROTOCOL =
+          Protocol.parse(LegacyProtocolController.class.getResourceAsStream("/legacy/employee_registry.avpr"));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
+
+  @Autowired
+  private ClientFactory clientFactory;
 
   public Promise<Result> addEmployee(String firstName, String lastName) throws Exception {
     Schema requestSchema = LEGACY_PROTOCOL.getMessages().get("addEmployee").getRequest();
@@ -74,8 +74,7 @@ public class LegacyProtocolController {
     employeeValue.put("lastName", lastName);
 
     JsonNode record = AvroHelper.convertFromSimpleRecord(employeeSchema, employeeValue);
-    Object[] args =
-        new Object[] {AvroHelper.createGenericRequestFromRecord(employeeSchema, record)};
+    Object[] args = new Object[] {AvroHelper.createGenericRequestFromRecord(employeeSchema, record)};
     return invoke("addEmployee", args);
   }
 

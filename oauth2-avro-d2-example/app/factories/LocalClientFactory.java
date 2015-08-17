@@ -46,8 +46,7 @@ public class LocalClientFactory implements FactoryBean<Object>, InvocationHandle
 
   @Override
   public Object getObject() throws Exception {
-    return Proxy.newProxyInstance(interfaceClass.getClassLoader(), new Class[] { interfaceClass },
-        this);
+    return Proxy.newProxyInstance(interfaceClass.getClassLoader(), new Class[] { interfaceClass }, this);
   }
 
   @Override

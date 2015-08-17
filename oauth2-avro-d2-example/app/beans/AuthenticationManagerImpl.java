@@ -57,10 +57,8 @@ public class AuthenticationManagerImpl implements AuthenticationManager {
   @Override
   public Authentication authenticate(String token) throws AuthenticationError {
     try {
-      PreAuthenticatedAuthenticationToken authRequest =
-          new PreAuthenticatedAuthenticationToken(token.toString(), "");
-      OAuth2Authentication authResult =
-          (OAuth2Authentication) authenticationManager.authenticate(authRequest);
+      PreAuthenticatedAuthenticationToken authRequest = new PreAuthenticatedAuthenticationToken(token.toString(), "");
+      OAuth2Authentication authResult = (OAuth2Authentication) authenticationManager.authenticate(authRequest);
 
       Authentication authentication = new Authentication();
       authentication.setClient(getClientAuthentication(authResult.getOAuth2Request()));
@@ -73,7 +71,8 @@ public class AuthenticationManagerImpl implements AuthenticationManager {
 
   private ClientAuthentication getClientAuthentication(OAuth2Request request) {
     List<String> authorities = request.getAuthorities().stream()
-        .map(authority -> authority.getAuthority()).collect(Collectors.toList());
+        .map(authority -> authority.getAuthority())
+        .collect(Collectors.toList());
     List<String> scopes = new ArrayList<>(request.getScope());
     ClientAuthentication client = new ClientAuthentication();
     client.setId(request.getClientId());
@@ -88,7 +87,8 @@ public class AuthenticationManagerImpl implements AuthenticationManager {
       return null;
     } else {
       List<String> authorities = authentication.getAuthorities().stream()
-          .map(authority -> authority.getAuthority()).collect(Collectors.toList());
+          .map(authority -> authority.getAuthority())
+          .collect(Collectors.toList());
       UserAuthentication user = new UserAuthentication();
       user.setId(authentication.getName());
       user.setAuthorities(authorities);

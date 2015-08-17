@@ -51,8 +51,7 @@ public class SparkMasterStartable implements Startable {
 
   @Override
   public void onStart() throws Throwable {
-    actorSystem = Master.startSystemAndActor(sparkHost, sparkMasterPort, sparkMasterWebUIPort,
-        sparkConf)._1();
+    actorSystem = Master.startSystemAndActor(sparkHost, sparkMasterPort, sparkMasterWebUIPort, sparkConf)._1();
   }
 
   @Override

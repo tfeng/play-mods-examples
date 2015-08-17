@@ -14,11 +14,11 @@
 
   <context:component-scan base-package="beans" />
 
+  <context:property-placeholder />
+
   <util:map id="play-mods.avro.protocol-implementations" key-type="java.lang.Class">
     <entry key="controllers.protocols.Example" value-ref="example" />
     <entry key="controllers.protocols.Points" value-ref="points" />
   </util:map>
-
-  <context:property-placeholder />
 
 </beans>

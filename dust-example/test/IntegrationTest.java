@@ -18,12 +18,10 @@
  * limitations under the License.
  */
 
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
 import static play.test.Helpers.running;
 import static play.test.Helpers.testServer;
-
-import java.io.File;
 
 import org.junit.Test;
 
@@ -35,17 +33,12 @@ import play.libs.ws.WSResponse;
  */
 public class IntegrationTest {
 
-  public static final String LOCK_FILE_NAME = "play-test.lock";
-
-  public static final File LOC_FILE_DIRECTORY = new File(System.getProperty("java.io.tmpdir"));
-
   private static final int TIMEOUT = Integer.MAX_VALUE;
 
   @Test
   public void testCustomName() {
     running(testServer(3333), () -> {
-      WSResponse response = WS.url("http://localhost:3333").setQueryParameter("name", "Amy").get()
-          .get(TIMEOUT);
+      WSResponse response = WS.url("http://localhost:3333").setQueryParameter("name", "Amy").get().get(TIMEOUT);
       assertThat(response.getBody(), is("Hello, Amy!"));
     });
   }

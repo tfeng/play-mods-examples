@@ -20,8 +20,8 @@
     <entry key="controllers.protocols.Message" value-ref="messageImpl" />
   </util:map>
 
-  <util:properties id="play-mods.kafka.consumer-properties" location="consumer.properties" />
+  <util:properties id="kafka-example.consumer-properties" location="consumer.properties" />
 
-  <util:properties id="play-mods.kafka.producer-properties" location="producer.properties" />
+  <util:properties id="kafka-example.producer-properties" location="producer.properties" />
 
 </beans>

@@ -5,8 +5,8 @@ version := "1.0.0-SNAPSHOT"
 lazy val root = project in file(".") enablePlugins(PlayJava)
 
 libraryDependencies ++= Seq(
-  javaWs % "test",
-  "org.hamcrest" % "hamcrest-all" % "1.3" % "test"
+  "me.tfeng.toolbox" % "common" % "0.4.2-SNAPSHOT" % "test->test",
+  javaWs % "test"
 )
 
 Dust.settings

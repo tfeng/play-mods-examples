@@ -33,7 +33,7 @@ import play.mvc.Results;
 /**
  * @author Thomas Feng (huining.feng@gmail.com)
  */
-@Component("proxyController")
+@Component
 public class ProxyController {
 
   @Autowired

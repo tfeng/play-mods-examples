@@ -28,7 +28,6 @@ import java.net.URL;
 import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Value;
 
 import controllers.protocols.Example;
 import play.libs.ws.WS;
@@ -46,7 +45,9 @@ public class IntegrationTest {
     running(testServer(9000), () -> {
       try {
         WSResponse response = WS.url("http://localhost:9000/proxy")
-            .setQueryParameter("message", "Test Message through Client").get().get(TIMEOUT);
+            .setQueryParameter("message", "Test Message through Client")
+            .get()
+            .get(TIMEOUT);
         assertThat(response.getBody(), is("Test Message through Client"));
       } catch (Exception e) {
         throw new RuntimeException(e);
@@ -58,8 +59,7 @@ public class IntegrationTest {
   public void testDirectRequest() {
     running(testServer(9000), () -> {
       try {
-        HttpTransceiver transceiver =
-            new HttpTransceiver(new URL("http://localhost:9000/example"));
+        HttpTransceiver transceiver = new HttpTransceiver(new URL("http://localhost:9000/example"));
         Example example = SpecificRequestor.getClient(Example.class, transceiver);
         assertThat(example.echo("Test Message"), is("Test Message"));
       } catch (Exception e) {

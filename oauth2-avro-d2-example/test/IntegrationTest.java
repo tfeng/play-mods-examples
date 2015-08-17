@@ -61,8 +61,7 @@ public class IntegrationTest {
     }
 
     @Override
-    public Promise<List<ByteBuffer>> transceive(List<ByteBuffer> request,
-        RequestPreparer requestPreparer) {
+    public Promise<List<ByteBuffer>> transceive(List<ByteBuffer> request, RequestPreparer requestPreparer) {
       return super.transceive(request, (builder, contentType, url) -> {
         if (requestPreparer != null) {
           requestPreparer.prepare(builder, contentType, url);
@@ -113,7 +112,9 @@ public class IntegrationTest {
     running(testServer(PORT), () -> {
       try {
         WSResponse response = WS.url("http://localhost:" + PORT + "/proxy")
-            .setQueryParameter("message", "Test Message through Client").get().get(TIMEOUT);
+            .setQueryParameter("message", "Test Message through Client")
+            .get()
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(401));
       } catch (Exception e) {
         throw new RuntimeException(e);
@@ -132,7 +133,9 @@ public class IntegrationTest {
 
         response = WS.url("http://localhost:" + PORT + "/proxy")
             .setQueryParameter("message", "Test Message through Client")
-            .setHeader("Authorization", "Bearer " + clientAccessToken).get().get(TIMEOUT);
+            .setHeader("Authorization", "Bearer " + clientAccessToken)
+            .get()
+            .get(TIMEOUT);
         assertThat(response.getStatus(), is(401));
       } catch (Exception e) {
         throw new RuntimeException(e);
@@ -153,8 +156,7 @@ public class IntegrationTest {
         String userAccessToken = response.asJson().findPath("accessToken").textValue();
 
         TransceiverWithAuthorization transceiver =
-            new TransceiverWithAuthorization(new URL("http://localhost:" + PORT + "/example"),
-                userAccessToken);
+            new TransceiverWithAuthorization(new URL("http://localhost:" + PORT + "/example"), userAccessToken);
         Example example = getAvroComponent().client(Example.class, transceiver);
         assertThat(example.echo("Test Message"), is("Test Message"));
 
@@ -176,8 +178,7 @@ public class IntegrationTest {
         fail("AvroRuntimeException is expected");
       } catch (AvroRuntimeException e) {
         assertThat(e.getCause().getMessage(),
-            is("Server returned HTTP response code 401 at URL http://localhost:" + PORT
-                + "/example"));
+            is("Server returned HTTP response code 401 at URL http://localhost:" + PORT + "/example"));
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -192,15 +193,13 @@ public class IntegrationTest {
         String clientAccessToken = response.asJson().findPath("accessToken").textValue();
 
         TransceiverWithAuthorization transceiver =
-            new TransceiverWithAuthorization(new URL("http://localhost:" + PORT + "/example"),
-                clientAccessToken);
+            new TransceiverWithAuthorization(new URL("http://localhost:" + PORT + "/example"), clientAccessToken);
         Example example = getAvroComponent().client(Example.class, transceiver);
         example.echo("Test Message");
         fail("AvroRuntimeException is expected");
       } catch (AvroRuntimeException e) {
         assertThat(e.getCause().getMessage(),
-            is("Server returned HTTP response code 401 at URL http://localhost:" + PORT
-                + "/example"));
+            is("Server returned HTTP response code 401 at URL http://localhost:" + PORT + "/example"));
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -222,17 +221,18 @@ public class IntegrationTest {
 
   private WSResponse authenticateClient(String clientId, String clientSecret) {
     ObjectNode request = Json.newObject();
-    request.putAll(ImmutableMap
-        .of("clientId", request.textNode(clientId), "clientSecret", request.textNode(clientSecret)));
+    request.setAll(
+        ImmutableMap.of("clientId", request.textNode(clientId), "clientSecret", request.textNode(clientSecret)));
     return WS.url("http://localhost:" + PORT + "/client/authenticate").post(request).get(TIMEOUT);
   }
 
   private WSResponse authenticateUser(String clientAccessToken, String username, String password) {
     ObjectNode request = Json.newObject();
-    request.putAll(ImmutableMap.of("username", request.textNode(username), "password",
-        request.textNode(password)));
+    request.setAll(ImmutableMap.of("username", request.textNode(username), "password", request.textNode(password)));
     return WS.url("http://localhost:" + PORT + "/user/authenticate")
-        .setHeader("Authorization", "Bearer " + clientAccessToken).post(request).get(TIMEOUT);
+        .setHeader("Authorization", "Bearer " + clientAccessToken)
+        .post(request)
+        .get(TIMEOUT);
   }
 
   private AvroComponent getAvroComponent() {

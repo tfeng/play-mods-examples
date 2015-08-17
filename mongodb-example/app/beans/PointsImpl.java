@@ -59,8 +59,7 @@ public class PointsImpl implements InitializingBean, Points {
 
   @Override
   public Void addPoint(Point point) {
-    MongoCollection<Document> collection =
-        mongoClient.getDatabase(dbName).getCollection(dbCollection);
+    MongoCollection<Document> collection = mongoClient.getDatabase(dbName).getCollection(dbCollection);
     collection.insertOne(RecordConverter.toDocument(point));
     return null;
   }

@@ -50,6 +50,9 @@ public class SparkWorkerStartable implements Startable {
 
   private ActorSystem actorSystem;
 
+  @Autowired
+  private SparkConf sparkConf;
+
   @Value("${spark.host}")
   private String sparkHost;
 
@@ -61,17 +64,12 @@ public class SparkWorkerStartable implements Startable {
 
   private File tempDir;
 
-  @Autowired
-  private SparkConf sparkConf;
-
   @Override
   public void onStart() throws Throwable {
-    WorkerArguments workerArguments = new WorkerArguments(new String[] {"spark://localhost:7077"},
-        sparkConf);
+    WorkerArguments workerArguments = new WorkerArguments(new String[] {"spark://localhost:7077"}, sparkConf);
     tempDir = Files.createTempDirectory("sparkWorker").toFile();
-    actorSystem = Worker.startSystemAndActor(sparkHost, sparkSlavePort, sparkSlaveWebUIPort,
-        workerArguments.cores(), workerArguments.memory(), workerArguments.masters(),
-        tempDir.toString(), Option.apply(1), sparkConf)._1();
+    actorSystem = Worker.startSystemAndActor(sparkHost, sparkSlavePort, sparkSlaveWebUIPort, workerArguments.cores(),
+        workerArguments.memory(), workerArguments.masters(), tempDir.toString(), Option.apply(1), sparkConf)._1();
   }
 
   @Override

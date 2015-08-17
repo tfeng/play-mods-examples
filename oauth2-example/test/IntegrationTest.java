@@ -190,17 +190,18 @@ public class IntegrationTest {
 
   private WSResponse authenticateClient(String clientId, String clientSecret) {
     ObjectNode request = Json.newObject();
-    request.setAll(ImmutableMap
-        .of("clientId", request.textNode(clientId), "clientSecret", request.textNode(clientSecret)));
+    request.setAll(
+        ImmutableMap.of("clientId", request.textNode(clientId), "clientSecret", request.textNode(clientSecret)));
     return WS.url("http://localhost:3333/client/authenticate").post(request).get(TIMEOUT);
   }
 
   private WSResponse authenticateUser(String clientAccessToken, String username, String password) {
     ObjectNode request = Json.newObject();
-    request.setAll(ImmutableMap
-        .of("username", request.textNode(username), "password", request.textNode(password)));
+    request.setAll(ImmutableMap.of("username", request.textNode(username), "password", request.textNode(password)));
     return WS.url("http://localhost:3333/user/authenticate")
-        .setHeader("Authorization", "Bearer " + clientAccessToken).post(request).get(TIMEOUT);
+        .setHeader("Authorization", "Bearer " + clientAccessToken)
+        .post(request)
+        .get(TIMEOUT);
   }
 
   private WSResponse getUser(String userAccessToken) {
@@ -215,6 +216,8 @@ public class IntegrationTest {
     ObjectNode request = Json.newObject();
     request.setAll(ImmutableMap.of("refreshToken", request.textNode(refreshToken)));
     return WS.url("http://localhost:3333/user/refresh")
-        .setHeader("Authorization", "Bearer " + clientAccessToken).post(request).get(TIMEOUT);
+        .setHeader("Authorization", "Bearer " + clientAccessToken)
+        .post(request)
+        .get(TIMEOUT);
   }
 }
