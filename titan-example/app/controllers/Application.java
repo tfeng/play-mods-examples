@@ -94,14 +94,13 @@ public class Application extends Controller {
       GraphTraversalSource traversal = transaction.traversal();
       GraphTraversal<Vertex, Object> names = traversal.V()
           .has("name", name)
-          .as("source")
           .union(
               local(bothE("friend").order().by("strength", Order.decr)).otherV()
                   .union(__(), local(bothE("friend").order().by("strength", Order.decr)).otherV()),
               local(bothE("enemy").order().by("strength", Order.decr)).otherV()
                   .local(bothE("enemy").order().by("strength", Order.decr)).otherV())
+          .simplePath()
           .dedup()
-          .where(P.neq("source"))
           .values("name");
       if (names.hasNext()) {
         StringBuffer buffer = new StringBuffer();
