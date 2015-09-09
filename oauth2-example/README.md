@@ -11,11 +11,11 @@ Security is important, as many developers know. What is also important is that t
 
 Play framework, however, does not provide a standard way to develop secured code. The [Play OAuth2 module](https://github.com/tfeng/play-mods/tree/master/oauth2) fills this gap. It integrates Play application with Spring Security OAuth, and supports definition of authorization rules by Java annotation.
 
-The module also provides an authentication controller. It implements the commonly required endpoints for authenticating a client and authenticating a user with that client. Users of the module may define the authentication with Spring wiring.
+The module also provides an authentication controller. It implements the commonly required endpoints for authenticating a client and authenticating a user through that client. User of the module may customize the authentication with Spring wiring.
 
 #### Manual Testing
 
-A client must be authorized by the service before it can send further requests to the service. The authorization specifies the privileges of the client (e.g., read-only, read-write, admin, etc). In this case, we test with curl on the command line, and we are acting as a client ourselves.
+A client must be authenticated by the service before it can send further requests to the service. The authentication specifies the privileges of the client (e.g., read-only, read-write, admin, etc). In this case, we test with curl on the command line, and we are acting as a client ourselves.
 
 ```bash
 $ curl -X POST -H "Content-Type: application/json" -d '{"clientId": "trusted-client", "clientSecret": "trusted-client-password"}' http://localhost:9000/client/authenticate
@@ -24,7 +24,7 @@ $ curl -X POST -H "Content-Type: application/json" -d '{"clientId": "trusted-cli
 
 Here the ```accessToken``` is the token that subsequent requests from the same client should use to authenticate itself with the same service.
 
-In this example, for simplicity, the client id and secret are predefined. All the access tokens are store in memory. After restart of the application, the previous access tokens are lost, and clients need to be re-authenticated.
+In this example, for simplicity, the client ID and secret are predefined. All the access tokens are store in memory. After restart of the application, the previous access tokens are lost, and clients need to be re-authenticated.
 
 If the authentication does not succeed, an error is returned.
 

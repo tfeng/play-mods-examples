@@ -7,9 +7,9 @@ An example of Avro D2 web service with OAuth2, using [Avro D2 module](https://gi
 
 #### Overview
 
-Avro D2 provides dynamic discovery and client-side load balancing. Similar to [Avro D2 example](../avro-d2-example), there is an endpoint in this example to accept Avro binary IPC requests. There is also an endpoint to simulate a client calling the Avro binary IPC endpoint with a generated Java proxy.
+Avro D2 provides dynamic discovery and client-side load balancing. Similar to [Avro D2 example](../avro-d2-example), there is an endpoint in this example to accept Avro binary IPC requests, and there is also an endpoint to simulate a client calling the Avro binary IPC (Inter-Process Communication) endpoint with a generated Java proxy.
 
-In addition to the two endpoints, this example exposes endpoints to authenticate a user with OAuth2. This is similar to [OAuth2 example](../oauth2-example). If an Avro request is not properly authenticated, the service returns an error.
+In addition to the two endpoints, this example exposes endpoints to authenticate a user with OAuth2. This is similar to [OAuth2 example](../oauth2-example). If an Avro IPC request is not properly authenticated, the service returns an error.
 
 #### Manual testing
 
@@ -70,4 +70,4 @@ Exception in thread "main" java.io.IOException: Server returned HTTP response co
 	at org.apache.avro.tool.Main.main(Main.java:73)
 ```
 
-Currently, there is no way to send a request with the access token using the Avro command-line tool. [HttpTransceiver](http://avro.apache.org/docs/1.7.7/api/java/org/apache/avro/ipc/HttpTransceiver.html) in the Avro library does not set an authorization header. To see how this is done with a custom transceiver, refer to [InternalHttpTransceiver](https://github.com/tfeng/play-mods/blob/master/avro/app/org/apache/avro/ipc/InternalHttpTransceiver.java).
+Currently, there is no way to send a request with the access token using the Avro command-line tool. [HttpTransceiver](http://avro.apache.org/docs/1.7.7/api/java/org/apache/avro/ipc/HttpTransceiver.html) in the Avro library does not set an authorization header. To see how this is done with a custom transceiver, refer to [AsyncHttpTransceiver](https://github.com/tfeng/play-mods/blob/master/avro/app/org/apache/avro/ipc/AsyncHttpTransceiver.java) and [AuthorizationPreservingRequestPreparer](https://github.com/tfeng/play-mods/blob/master/avro/app/me/tfeng/playmods/avro/AuthorizationPreservingRequestPreparer.java).

@@ -1,7 +1,7 @@
 avro-example
 =========
 
-A simple example that demonstrates how to create an [Avro IPC](http://avro.apache.org/docs/current/spec.html#Protocol+Declaration) server and exchange messages with it.
+A simple example that demonstrates how to create an [Avro IPC (Inter-Process Communication)](http://avro.apache.org/docs/current/spec.html#Protocol+Declaration) server and exchange messages with it.
 
 ---
 
@@ -11,9 +11,9 @@ The ```routes``` files contains 4 endpoints, all supporting only ```POST``` type
 * /example and /points: These endpoints accept Avro binary requests, which should have ```Content-Type: avro/binary``` header.
     * /example endpoint provides a simple protocol that can echo text.
     * /points endpoint provides the functionality to calculate nearest points. It provides a method to add one 2-dimentional point at a time, a method to compute the _k_ nearest points from a given point, and a method to clear all the added points.
-* /example/\* and /points/\*: These endpoints accept Avro Json requests, which should have ```Content-Type: avro/json``` header. The functionality is similar to the previous Avro binary endpoints, except that method name of a protocol is specifically names in the URL instead of a separate message parameter.
+* /example/\* and /points/\*: These endpoints accept Avro Json requests, which should have ```Content-Type: avro/json``` header. The functionality is similar to the previous Avro binary endpoints, except that data is passed to the server in message body using Json format, and method names are specified in the URL.
 
-#### Sending request with Avro command-line tool
+#### Sending binary request with Avro command-line tool
 
 Avro command-line tool ([avro-tools-1.7.7.jar](http://central.maven.org/maven2/org/apache/avro/avro-tools/1.7.7/avro-tools-1.7.7.jar)) requires protocol (.avpr) files while sending requests to a server. Therefore, for this example, one must first generate the protocol files from the Avro IDL files (.avdl). Specification of Avro IDL can be found [here](http://avro.apache.org/docs/current/idl.html).
 
@@ -62,7 +62,7 @@ Exception in thread "main" org.apache.avro.AvroRemoteException: {"k": 2}
 	at org.apache.avro.tool.Main.main(Main.java:73)
 ```
 
-#### Sending request with curl
+#### Sending Json request with curl
 
 A request can also be sent to the server using curl on the command-line. We may use the Avro Json format, which encodes data in plain text and is generally easier to use. However, note that this approach is not specified in Avro specification, so it is not a standard way. Also due to the significantly increased data size, one should use Avro Json only for testing purpose.
 
