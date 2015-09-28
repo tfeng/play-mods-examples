@@ -6,7 +6,7 @@ lazy val root = project in file(".") enablePlugins(PlayJava)
 
 libraryDependencies ++= Seq(
   "commons-io" % "commons-io" % "2.4",
-  "me.tfeng.play-mods" % "oauth2" % "0.5.6",
+  "me.tfeng.play-mods" % "oauth2" % "0.5.9",
   javaWs % "test"
 )
 

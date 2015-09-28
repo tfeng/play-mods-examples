@@ -8,6 +8,7 @@
 /.settings/
 /RUNNING_PID
 /bin/
+/codegen/
 /dist/
 /logs/
 /out/
