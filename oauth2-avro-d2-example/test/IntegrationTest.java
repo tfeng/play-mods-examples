@@ -28,7 +28,6 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.ipc.AsyncHttpTransceiver;
 import org.junit.Test;
 
@@ -38,6 +37,7 @@ import com.google.common.collect.ImmutableMap;
 import controllers.protocols.Example;
 import controllers.protocols.ExampleClient;
 import me.tfeng.playmods.avro.AvroComponent;
+import me.tfeng.playmods.avro.RemoteInvocationException;
 import me.tfeng.playmods.http.HttpRequestPoster;
 import me.tfeng.playmods.http.RequestPreparer;
 import me.tfeng.playmods.modules.SpringModule;
@@ -175,10 +175,10 @@ public class IntegrationTest {
         URL url = new URL("http://localhost:" + PORT + "/example");
         Example example = getAvroComponent().client(Example.class, url);
         example.echo("Test Message");
-        fail("AvroRuntimeException is expected");
-      } catch (AvroRuntimeException e) {
+        fail("RemoteInvocationException is expected");
+      } catch (RemoteInvocationException e) {
         assertThat(e.getCause().getMessage(),
-            is("Server returned HTTP response code 401 at URL http://localhost:" + PORT + "/example"));
+            is("Remote server at http://localhost:" + PORT + "/example returned HTTP response code 401"));
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -196,10 +196,10 @@ public class IntegrationTest {
             new TransceiverWithAuthorization(new URL("http://localhost:" + PORT + "/example"), clientAccessToken);
         Example example = getAvroComponent().client(Example.class, transceiver);
         example.echo("Test Message");
-        fail("AvroRuntimeException is expected");
-      } catch (AvroRuntimeException e) {
+        fail("RemoteInvocationException is expected");
+      } catch (RemoteInvocationException e) {
         assertThat(e.getCause().getMessage(),
-            is("Server returned HTTP response code 401 at URL http://localhost:" + PORT + "/example"));
+            is("Remote server at http://localhost:" + PORT + "/example returned HTTP response code 401"));
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
