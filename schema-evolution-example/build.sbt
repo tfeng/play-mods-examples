@@ -6,7 +6,7 @@ lazy val root = project in file(".") enablePlugins(PlayJava)
 
 libraryDependencies ++= Seq(
   "commons-io" % "commons-io" % "2.4",
-  "com.google.guava" % "guava" % "18.0",
+  "com.google.guava" % "guava" % "19.0",
   javaWs % "test"
 )
 

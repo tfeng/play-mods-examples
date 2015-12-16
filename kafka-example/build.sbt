@@ -6,9 +6,9 @@ lazy val root = project in file(".") enablePlugins(PlayJava)
 
 libraryDependencies ++= Seq(
   "commons-io" % "commons-io" % "2.4",
-  "me.tfeng.play-mods" % "spring" % "0.5.13",
-  "me.tfeng.toolbox" % "kafka" % "0.5.13",
-  "org.apache.zookeeper" % "zookeeper" % "3.4.6",
+  "me.tfeng.play-mods" % "spring" % "0.6.0",
+  "me.tfeng.toolbox" % "kafka" % "0.6.0",
+  "org.apache.zookeeper" % "zookeeper" % "3.4.7",
   "org.hamcrest" % "hamcrest-all" % "1.3" % "test"
 )
 
