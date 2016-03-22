@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 Thomas Feng
+ * Copyright 2016 Thomas Feng
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -23,9 +23,17 @@ import static org.junit.Assert.assertThat;
 import static play.test.Helpers.running;
 import static play.test.Helpers.testServer;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import me.tfeng.playmods.spring.ApplicationLoader;
+import me.tfeng.playmods.spring.ExceptionWrapper;
+import play.Application;
+import play.ApplicationLoader.Context;
+import play.Environment;
 import play.libs.ws.WS;
+import play.libs.ws.WSClient;
+import play.libs.ws.WSRequest;
 import play.libs.ws.WSResponse;
 
 /**
@@ -33,20 +41,31 @@ import play.libs.ws.WSResponse;
  */
 public class IntegrationTest {
 
-  private static final int TIMEOUT = Integer.MAX_VALUE;
+  private static final int PORT = 3333;
+
+  private Application application;
+
+  @Before
+  public void setup() {
+    application = new ApplicationLoader().load(new Context(Environment.simple()));
+  }
 
   @Test
   public void testCustomName() {
-    running(testServer(3333), () -> {
-      WSResponse response = WS.url("http://localhost:3333").setQueryParameter("name", "Amy").get().get(TIMEOUT);
+    running(testServer(PORT, application), () -> {
+      WSClient client = WS.newClient(PORT);
+      WSRequest request = client.url("/").setQueryParameter("name", "Amy");
+      WSResponse response = ExceptionWrapper.wrap(() -> request.get().toCompletableFuture().get());
       assertThat(response.getBody(), is("Hello, Amy!"));
     });
   }
 
   @Test
   public void testDefaultName() {
-    running(testServer(3333), () -> {
-      WSResponse response = WS.url("http://localhost:3333").get().get(TIMEOUT);
+    running(testServer(PORT, application), () -> {
+      WSClient client = WS.newClient(PORT);
+      WSRequest request = client.url("/");
+      WSResponse response = ExceptionWrapper.wrap(() -> request.get().toCompletableFuture().get());
       assertThat(response.getBody(), is("Hello, Thomas!"));
     });
   }

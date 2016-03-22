@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 Thomas Feng
+ * Copyright 2016 Thomas Feng
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -22,6 +22,8 @@ package beans;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,12 +35,14 @@ import org.springframework.security.oauth2.provider.authentication.OAuth2Authent
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.stereotype.Component;
 
+import com.google.inject.Inject;
+
+import akka.actor.ActorSystem;
 import me.tfeng.playmods.oauth2.Authentication;
 import me.tfeng.playmods.oauth2.AuthenticationManagerClient;
 import me.tfeng.playmods.oauth2.ClientAuthentication;
 import me.tfeng.playmods.oauth2.UserAuthentication;
-import play.libs.Akka;
-import play.libs.F.Promise;
+import play.libs.concurrent.HttpExecution;
 import scala.concurrent.ExecutionContext;
 
 /**
@@ -46,6 +50,9 @@ import scala.concurrent.ExecutionContext;
  */
 @Component("play-mods.oauth2.authentication-manager")
 public class AuthenticationManagerImpl implements AuthenticationManagerClient {
+
+  @Inject
+  private ActorSystem actorSystem;
 
   @Autowired
   @Qualifier("oauth2-example.authentication-manager")
@@ -55,16 +62,16 @@ public class AuthenticationManagerImpl implements AuthenticationManagerClient {
   private String executionContextId;
 
   @Override
-  public Promise<Authentication> authenticate(String token) {
-    ExecutionContext executionContext = Akka.system().dispatchers().lookup(executionContextId);
-    return Promise.promise(() -> {
+  public CompletionStage<Authentication> authenticate(String token) {
+    ExecutionContext executionContext = actorSystem.dispatchers().lookup(executionContextId);
+    return CompletableFuture.supplyAsync(() -> {
       PreAuthenticatedAuthenticationToken authRequest = new PreAuthenticatedAuthenticationToken(token.toString(), "");
       OAuth2Authentication authResult = (OAuth2Authentication) authenticationManager.authenticate(authRequest);
       Authentication authentication = new Authentication();
       authentication.setClient(getClientAuthentication(authResult.getOAuth2Request()));
       authentication.setUser(getUserAuthentication(authResult.getUserAuthentication()));
       return authentication;
-    }, executionContext);
+    }, HttpExecution.fromThread(executionContext));
   }
 
   private ClientAuthentication getClientAuthentication(OAuth2Request request) {

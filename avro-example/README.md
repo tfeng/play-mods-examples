@@ -15,27 +15,27 @@ The ```routes``` files contains 4 endpoints, all supporting only ```POST``` type
 
 #### Sending binary request with Avro command-line tool
 
-Avro command-line tool ([avro-tools-1.7.7.jar](http://central.maven.org/maven2/org/apache/avro/avro-tools/1.7.7/avro-tools-1.7.7.jar)) requires protocol (.avpr) files while sending requests to a server. Therefore, for this example, one must first generate the protocol files from the Avro IDL files (.avdl). Specification of Avro IDL can be found [here](http://avro.apache.org/docs/current/idl.html).
+Avro command-line tool ([avro-tools-1.8.0.jar](http://central.maven.org/maven2/org/apache/avro/avro-tools/1.8.0/avro-tools-1.8.0.jar)) requires protocol (.avpr) files while sending requests to a server. Therefore, for this example, one must first generate the protocol files from the Avro IDL files (.avdl). Specification of Avro IDL can be found [here](http://avro.apache.org/docs/current/idl.html).
 
 Run ```activator compile``` before ```activator run``` to have those protocol files generated.
 
 ##### /example
 
 ```bash
-$ java -jar avro-tools-1.7.7.jar rpcsend http://localhost:9000/example target/schemata/example.avpr echo -data '{"message": "hello"}'
+$ java -jar avro-tools-1.8.0.jar rpcsend http://localhost:9000/example codegen/example.avpr echo -data '{"message": "hello"}'
 "hello"
 ```
 
 ##### /points
 
 ```bash
-$ java -jar avro-tools-1.7.7.jar rpcsend http://localhost:9000/points target/schemata/points.avpr addPoint -data '{"point": {"x": 1.0, "y": 1.0}}'
+$ java -jar avro-tools-1.8.0.jar rpcsend http://localhost:9000/points codegen/points.avpr addPoint -data '{"point": {"x": 1.0, "y": 1.0}}'
 null
 
-$ java -jar avro-tools-1.7.7.jar rpcsend http://localhost:9000/points target/schemata/points.avpr addPoint -data '{"point": {"x": -0.5, "y": -0.5}}'
+$ java -jar avro-tools-1.8.0.jar rpcsend http://localhost:9000/points codegen/points.avpr addPoint -data '{"point": {"x": -0.5, "y": -0.5}}'
 null
 
-$ java -jar avro-tools-1.7.7.jar rpcsend http://localhost:9000/points target/schemata/points.avpr getNearestPoints -data '{"from": {"x": 0, "y": 0}, "k": 2}'
+$ java -jar avro-tools-1.8.0.jar rpcsend http://localhost:9000/points codegen/points.avpr getNearestPoints -data '{"from": {"x": 0, "y": 0}, "k": 2}'
 [ {
   "x" : -0.5,
   "y" : -0.5
@@ -44,10 +44,10 @@ $ java -jar avro-tools-1.7.7.jar rpcsend http://localhost:9000/points target/sch
   "y" : 1.0
 } ]
 
-$ java -jar avro-tools-1.7.7.jar rpcsend http://localhost:9000/points target/schemata/points.avpr clear -data ''
+$ java -jar avro-tools-1.8.0.jar rpcsend http://localhost:9000/points codegen/points.avpr clear -data ''
 null
 
-$ java -jar avro-tools-1.7.7.jar rpcsend http://localhost:9000/points target/schemata/points.avpr getNearestPoints -data '{"from": {"x": 0, "y": 0}, "k": 2}'
+$ java -jar avro-tools-1.8.0.jar rpcsend http://localhost:9000/points codegen/points.avpr getNearestPoints -data '{"from": {"x": 0, "y": 0}, "k": 2}'
 Exception in thread "main" org.apache.avro.AvroRemoteException: {"k": 2}
 	at org.apache.avro.ipc.generic.GenericRequestor.readError(GenericRequestor.java:101)
 	at org.apache.avro.ipc.Requestor$Response.getResponse(Requestor.java:554)
@@ -58,8 +58,8 @@ Exception in thread "main" org.apache.avro.AvroRemoteException: {"k": 2}
 	at org.apache.avro.ipc.Requestor.request(Requestor.java:101)
 	at org.apache.avro.ipc.generic.GenericRequestor.request(GenericRequestor.java:58)
 	at org.apache.avro.tool.RpcSendTool.run(RpcSendTool.java:101)
-	at org.apache.avro.tool.Main.run(Main.java:84)
-	at org.apache.avro.tool.Main.main(Main.java:73)
+	at org.apache.avro.tool.Main.run(Main.java:87)
+	at org.apache.avro.tool.Main.main(Main.java:76)
 ```
 
 #### Sending Json request with curl
@@ -88,7 +88,12 @@ $ curl -X POST -H "Content-Type: avro/json" -d '{"from": {"x": 0, "y": 0}, "k": 
 $ curl -X POST -H "Content-Type: avro/json" http://localhost:9000/points/clear
 null
 
-$ curl -X POST -H "Content-Type: avro/json" -d '{"from": {"x": 0, "y": 0}, "k": 2}' http://localhost:9000/points/getNearestPoints
+$ curl -i -X POST -H "Content-Type: avro/json" -d '{"from": {"x": 0, "y": 0}, "k": 2}' http://localhost:9000/points/getNearestPoints
+HTTP/1.1 400 Bad Request
+Content-Length: 48
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 22 Mar 2016 10:04:39 GMT
+
 {"controllers.protocols.KTooLargeError":{"k":2}}
 ```
 

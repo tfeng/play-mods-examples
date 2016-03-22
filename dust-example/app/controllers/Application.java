@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 Thomas Feng
+ * Copyright 2016 Thomas Feng
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -20,13 +20,14 @@
 
 package controllers;
 
+import java.util.concurrent.CompletionStage;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import me.tfeng.playmods.dust.DustComponent;
-import play.libs.F.Promise;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -41,9 +42,9 @@ public class Application extends Controller {
   @Autowired
   private DustComponent dustComponent;
 
-  public Promise<Result> index(String name) {
+  public CompletionStage<Result> index(String name) {
     ObjectNode data = Json.newObject();
     data.put("name", name);
-    return dustComponent.render("home/index", data).map(content -> Results.ok(content));
+    return dustComponent.render("home/index", data).thenApply(content -> Results.ok(content));
   }
 }

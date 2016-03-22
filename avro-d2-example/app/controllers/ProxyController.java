@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 Thomas Feng
+ * Copyright 2016 Thomas Feng
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -20,13 +20,14 @@
 
 package controllers;
 
+import java.util.concurrent.CompletionStage;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import controllers.protocols.ExampleClient;
 import me.tfeng.playmods.avro.d2.AvroD2Component;
-import play.libs.F.Promise;
 import play.mvc.Result;
 import play.mvc.Results;
 
@@ -40,8 +41,8 @@ public class ProxyController {
   @Qualifier("play-mods.avro-d2.component")
   private AvroD2Component avroD2Component;
 
-  public Promise<Result> invoke(String message) throws Exception {
+  public CompletionStage<Result> invoke(String message) throws Exception {
     ExampleClient proxy = avroD2Component.client(ExampleClient.class);
-    return proxy.echo(message).map(response -> Results.ok(response.toString()));
+    return proxy.echo(message).thenApply(response -> Results.ok(response.toString()));
   }
 }

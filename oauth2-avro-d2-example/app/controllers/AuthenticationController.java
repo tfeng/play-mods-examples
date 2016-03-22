@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 Thomas Feng
+ * Copyright 2016 Thomas Feng
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -23,6 +23,8 @@ package controllers;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -44,7 +46,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 
-import play.libs.F.Promise;
 import play.libs.Json;
 import play.mvc.BodyParser;
 import play.mvc.Controller;
@@ -73,7 +74,7 @@ public class AuthenticationController extends Controller {
   @Qualifier("oauth2-example.token-services")
   private AuthorizationServerTokenServices tokenServices;
 
-  public Promise<Result> authenticateClient() {
+  public CompletionStage<Result> authenticateClient() {
     JsonNode json = request().body().asJson();
     String clientId = json.findPath("clientId").textValue();
     String clientSecret = json.findPath("clientSecret").textValue();
@@ -91,11 +92,11 @@ public class AuthenticationController extends Controller {
         "accessToken", result.textNode(token.getValue()),
         "clientId", result.textNode(clientId),
         "expiration", result.numberNode(token.getExpiration().getTime())));
-    return Promise.pure(ok(result));
+    return CompletableFuture.completedFuture(ok(result));
   }
 
   @PreAuthorize("#oauth2.clientHasRole('ROLE_CLIENT') and #oauth2.hasScope('trust')")
-  public Promise<Result> authenticateUser() {
+  public CompletionStage<Result> authenticateUser() {
     JsonNode json = request().body().asJson();
     String username = json.findPath("username").textValue();
     String password = json.findPath("password").textValue();
@@ -115,11 +116,11 @@ public class AuthenticationController extends Controller {
         "username", result.textNode(username),
         "expiration", result.numberNode(token.getExpiration().getTime()),
         "refreshToken", result.textNode(token.getRefreshToken().getValue())));
-    return Promise.pure(ok(result));
+    return CompletableFuture.completedFuture(ok(result));
   }
 
   @PreAuthorize("#oauth2.clientHasRole('ROLE_CLIENT') and #oauth2.hasScope('trust')")
-  public Promise<Result> refreshUserAccessToken() {
+  public CompletionStage<Result> refreshUserAccessToken() {
     JsonNode body = request().body().asJson();
     String refreshToken = body.findPath("refreshToken").textValue();
 
@@ -134,6 +135,6 @@ public class AuthenticationController extends Controller {
         "accessToken", result.textNode(token.getValue()),
         "expiration", result.numberNode(token.getExpiration().getTime()),
         "refreshToken", result.textNode(token.getRefreshToken().getValue())));
-    return Promise.pure(ok(result));
+    return CompletableFuture.completedFuture(ok(result));
   }
 }

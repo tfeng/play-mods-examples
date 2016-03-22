@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 Thomas Feng
+ * Copyright 2016 Thomas Feng
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -20,6 +20,8 @@
 
 package controllers;
 
+import java.util.concurrent.CompletionStage;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -28,7 +30,6 @@ import controllers.protocols.Example;
 import controllers.protocols.ExampleClient;
 import me.tfeng.playmods.avro.d2.AvroD2BinaryIpcController;
 import me.tfeng.playmods.avro.d2.AvroD2Component;
-import play.libs.F.Promise;
 import play.mvc.BodyParser;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -47,14 +48,14 @@ public class Application extends Controller {
   private AvroD2BinaryIpcController controller;
 
   @PreAuthorize("hasRole('ROLE_USER')")
-  public Promise<Result> invoke(String message) throws Exception {
+  public CompletionStage<Result> invoke(String message) throws Exception {
     ExampleClient proxy = avroD2Component.client(ExampleClient.class);
-    return proxy.echo(message).map(response -> Results.ok(response.toString()));
+    return proxy.echo(message).thenApply(response -> Results.ok(response.toString()));
   }
 
   @PreAuthorize("hasRole('ROLE_USER')")
   @BodyParser.Of(BodyParser.Raw.class)
-  public Promise<Result> postAvroBinary() throws Throwable {
+  public CompletionStage<Result> postAvroBinary() throws Throwable {
     return controller.post(Example.class.getName());
   }
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 Thomas Feng
+ * Copyright 2016 Thomas Feng
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -21,6 +21,7 @@
 package controllers;
 
 import java.io.IOException;
+import java.util.concurrent.CompletionStage;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
@@ -37,7 +38,6 @@ import me.tfeng.playmods.avro.d2.factories.ClientFactory;
 import me.tfeng.toolbox.avro.AvroHelper;
 import play.Logger;
 import play.Logger.ALogger;
-import play.libs.F.Promise;
 import play.mvc.Result;
 import play.mvc.Results;
 
@@ -65,7 +65,7 @@ public class LegacyProtocolController {
   @Autowired
   private ClientFactory clientFactory;
 
-  public Promise<Result> addEmployee(String firstName, String lastName) throws Exception {
+  public CompletionStage<Result> addEmployee(String firstName, String lastName) throws Exception {
     Schema requestSchema = LEGACY_PROTOCOL.getMessages().get("addEmployee").getRequest();
 
     Schema employeeSchema = requestSchema.getField("employee").schema();
@@ -78,42 +78,38 @@ public class LegacyProtocolController {
     return invoke("addEmployee", args);
   }
 
-  public Promise<Result> countEmployees() throws Exception {
+  public CompletionStage<Result> countEmployees() throws Exception {
     Object[] args = new Object[0];
     return invoke("countEmployees", args);
   }
 
-  public Promise<Result> getEmployees(long managerId) throws Exception {
+  public CompletionStage<Result> getEmployees(long managerId) throws Exception {
     Object[] args = new Object[] {managerId};
     return invoke("getEmployees", args);
   }
 
-  public Promise<Result> getManager(long employeeId) throws Exception {
+  public CompletionStage<Result> getManager(long employeeId) throws Exception {
     Object[] args = new Object[] {employeeId};
     return invoke("getManager", args);
   }
 
-  public Promise<Result> makeManager(long managerId, long employeeId) throws Exception {
+  public CompletionStage<Result> makeManager(long managerId, long employeeId) throws Exception {
     Object[] args = new Object[] {managerId, employeeId};
     return invoke("makeManager", args);
   }
 
-  public Promise<Result> removeEmployee(long employeeId) throws Exception {
+  public CompletionStage<Result> removeEmployee(long employeeId) throws Exception {
     Object[] args = new Object[] {employeeId};
     return invoke("removeEmployee", args);
   }
 
-  private Promise<Result> invoke(String method, Object[] args) throws Exception {
+  private CompletionStage<Result> invoke(String method, Object[] args) throws Exception {
     AvroD2Client client = clientFactory.create(LEGACY_PROTOCOL, new SpecificData(), true);
     return client.request(method, args)
-        .<Result>map(result -> Results.ok(String.valueOf(result)))
-        .recover(e -> {
-          try {
-            LOG.warn("Exception thrown while processing request; returning bad request", e);
-            return Results.badRequest(e.getLocalizedMessage());
-          } catch (Exception e2) {
-            throw e;
-          }
+        .<Result>thenApply(result -> Results.ok(String.valueOf(result)))
+        .exceptionally(e -> {
+          LOG.warn("Exception thrown while processing request; returning bad request", e);
+          return Results.badRequest(e.getLocalizedMessage());
         });
   }
 }

@@ -1,2 +1,0 @@
-GET    /add    controllers.Application.addMessage(message)
-GET    /get    controllers.Application.getValues()

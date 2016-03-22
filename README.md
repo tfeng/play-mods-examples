@@ -10,5 +10,3 @@ List of examples:
 - [oauth2-example](oauth2-example): An example of a web service with OAuth2 support based on Spring Security and Spring Security OAuth.
 - [oauth2-avro-d2-example](oauth2-avro-d2-example): An example of scalable Avro web service with OAuth2.
 - [schema-evolution-example](schema-evolution-example): An example of schema evolution in a scalable Avro web service, showing how a client and a server exchange messages using different versions of a protocol.
-- [spark-example](spark-example): An example to demonstrate setting up a Spark server and reacting to Kafka events.
-- [titan-example](titan-example): An example of graph traversal using Titan and MongoDB storage backend.

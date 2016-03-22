@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 Thomas Feng
+ * Copyright 2016 Thomas Feng
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Properties;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import controllers.protocols.MessageClient;
@@ -41,8 +42,13 @@ import kafka.consumer.KafkaStream;
 import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.serializer.StringDecoder;
 import me.tfeng.playmods.avro.AvroComponent;
-import me.tfeng.playmods.modules.SpringModule;
+import me.tfeng.playmods.spring.ApplicationLoader;
 import me.tfeng.toolbox.kafka.AvroDecoder;
+import me.tfeng.toolbox.spring.ApplicationManager;
+import play.Application;
+import play.ApplicationLoader.Context;
+import play.Environment;
+import play.test.TestServer;
 import utils.Constants;
 
 /**
@@ -50,11 +56,19 @@ import utils.Constants;
  */
 public class IntegrationTest {
 
-  private static final int TIMEOUT = Integer.MAX_VALUE;
+  private static final int PORT = 3333;
+
+  private Application application;
+
+  @Before
+  public void setup() {
+    application = new ApplicationLoader().load(new Context(Environment.simple()));
+  }
 
   @Test
   public void testKafkaEvents() {
-    running(testServer(3333), () -> {
+    TestServer server = testServer(PORT, application);
+    running(server, () -> {
       try {
         Date beginning = new Date();
 
@@ -67,14 +81,15 @@ public class IntegrationTest {
             Collections.singletonMap(Constants.TOPIC, 1), new StringDecoder(null),
             new AvroDecoder<>(UserMessage.class)).get(Constants.TOPIC).get(0);
 
-        MessageClient client = getAvroComponent().client(MessageClient.class, new URL("http://localhost:3333/message"));
+        MessageClient client =
+            getAvroComponent().client(MessageClient.class, new URL("http", "localhost", PORT, "/message"));
         UserMessage messageOut = UserMessage.newBuilder()
             .setSubject("Raymond")
             .setAction("reads")
             .setObject("books")
             .setRequestHeader(null)
             .build();
-        client.send(messageOut).get(TIMEOUT);
+        client.send(messageOut).toCompletableFuture().get();
 
         ConsumerIterator<String, UserMessage> iterator = stream.iterator();
         assertThat(iterator.hasNext(), is(true));
@@ -99,6 +114,6 @@ public class IntegrationTest {
   }
 
   private AvroComponent getAvroComponent() {
-    return SpringModule.getApplicationManager().getBean(AvroComponent.class);
+    return application.injector().instanceOf(ApplicationManager.class).getBean(AvroComponent.class);
   }
 }

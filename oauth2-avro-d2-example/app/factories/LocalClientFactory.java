@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 Thomas Feng
+ * Copyright 2016 Thomas Feng
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -24,13 +24,14 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Required;
 
 import me.tfeng.playmods.avro.AvroComponent;
-import play.libs.F.Promise;
+import me.tfeng.playmods.spring.ExceptionWrapper;
 
 /**
  * @author Thomas Feng (huining.feng@gmail.com)
@@ -57,13 +58,13 @@ public class LocalClientFactory implements FactoryBean<Object>, InvocationHandle
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     Method beanMethod = bean.getClass().getMethod(method.getName(), method.getParameterTypes());
-    return Promise.promise(() -> {
+    return CompletableFuture.supplyAsync(ExceptionWrapper.wrapFunction(() -> {
       try {
         return beanMethod.invoke(bean, args);
       } catch (InvocationTargetException e) {
         throw e.getCause();
       }
-    }, avroComponent.getExecutionContext());
+    }), avroComponent.getExecutor());
   }
 
   @Override

@@ -32,6 +32,7 @@ If the authentication does not succeed, an error is returned.
 $ curl -i -X POST -H "Content-Type: application/json" -d '{"clientId": "trusted-client", "clientSecret": "wrong-trusted-client-password"}' http://localhost:9000/client/authenticate
 HTTP/1.1 401 Unauthorized
 Content-Length: 0
+Date: Tue, 22 Mar 2016 10:18:52 GMT
 ```
 
 To authenticate a user, one would use the client access token and a valid username and password (predefined in this example).

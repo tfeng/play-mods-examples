@@ -94,6 +94,7 @@ The old version does not have a method to count employees, so counting the curre
 $ curl -i "http://localhost:9000/legacy/countEmployees"
 HTTP/1.1 400 Bad Request
 Content-Length: 0
+Date: Tue, 22 Mar 2016 10:22:23 GMT
 ```
 
 Add 3 employees. The requests must be sent in a customized way to the Play controller, as defined in the ```routes``` file.

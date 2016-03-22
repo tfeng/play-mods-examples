@@ -100,7 +100,7 @@ There are two ways to send requests to this single-machine service:
 Using the service's URL, requests are sent essentially in the same way as not using D2. (See a similar Avro IPC example [here](https://github.com/tfeng/play-mods-examples/tree/master/avro-example).)
 
 ```bash
-$ java -jar avro-tools-1.7.7.jar rpcsend http://localhost:9000/example target/schemata/example.avpr echo -data '{"message": "hello"}'
+$ java -jar avro-tools-1.8.0.jar rpcsend http://localhost:9000/example codegen/example.avpr echo -data '{"message": "hello"}'
 "hello"
 ```
 

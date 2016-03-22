@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 Thomas Feng
+ * Copyright 2016 Thomas Feng
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -27,10 +27,16 @@ import java.net.URL;
 
 import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.ipc.specific.SpecificRequestor;
+import org.junit.Before;
 import org.junit.Test;
 
 import controllers.protocols.Example;
+import me.tfeng.playmods.spring.ApplicationLoader;
+import play.Application;
+import play.ApplicationLoader.Context;
+import play.Environment;
 import play.libs.ws.WS;
+import play.libs.ws.WSClient;
 import play.libs.ws.WSResponse;
 
 /**
@@ -38,16 +44,25 @@ import play.libs.ws.WSResponse;
  */
 public class IntegrationTest {
 
-  private static final int TIMEOUT = Integer.MAX_VALUE;
+  private static final int PORT = 9000;
+
+  private Application application;
+
+  @Before
+  public void setup() {
+    application = new ApplicationLoader().load(new Context(Environment.simple()));
+  }
 
   @Test
   public void testD2Request() {
-    running(testServer(9000), () -> {
+    running(testServer(PORT, application), () -> {
       try {
-        WSResponse response = WS.url("http://localhost:9000/proxy")
+        WSClient client = WS.newClient(PORT);
+        WSResponse response = client.url("/proxy")
             .setQueryParameter("message", "Test Message through Client")
             .get()
-            .get(TIMEOUT);
+            .toCompletableFuture()
+            .get();
         assertThat(response.getBody(), is("Test Message through Client"));
       } catch (Exception e) {
         throw new RuntimeException(e);
@@ -57,7 +72,7 @@ public class IntegrationTest {
 
   @Test
   public void testDirectRequest() {
-    running(testServer(9000), () -> {
+    running(testServer(PORT, application), () -> {
       try {
         HttpTransceiver transceiver = new HttpTransceiver(new URL("http://localhost:9000/example"));
         Example example = SpecificRequestor.getClient(Example.class, transceiver);

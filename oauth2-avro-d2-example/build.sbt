@@ -2,14 +2,15 @@ name := "oauth2-avro-d2-example"
 
 version := "1.0.0-SNAPSHOT"
 
+scalaVersion := "2.11.7"
+
 lazy val root = project in file(".") enablePlugins(PlayJava)
 
 libraryDependencies ++= Seq(
   "commons-io" % "commons-io" % "2.4",
-  "me.tfeng.play-mods" % "oauth2" % "0.7.1",
+  "me.tfeng.play-mods" % "avro-d2" % "0.8.0",
+  "me.tfeng.play-mods" % "oauth2" % "0.8.0",
   javaWs % "test"
 )
 
-AvroD2.settings
-
-routesGenerator := InjectedRoutesGenerator
+Avro.settings

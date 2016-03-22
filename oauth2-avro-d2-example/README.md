@@ -42,6 +42,7 @@ If the user access token is not provided, the service returns status code ```401
 $ curl -i "http://localhost:9000/proxy?message=hello"
 HTTP/1.1 401 Unauthorized
 Content-Length: 0
+Date: Tue, 22 Mar 2016 10:14:34 GMT
 ```
 
 If a client access token is mistakenly used in place of a user access token, the service also returns status code ```401 Unauthorized```.
@@ -50,15 +51,16 @@ If a client access token is mistakenly used in place of a user access token, the
 $ curl -i -H "Authorization: Bearer 02db69c8-8bbc-4649-a033-e49088f9f5ce" "http://localhost:9000/proxy?message=hello"
 HTTP/1.1 401 Unauthorized
 Content-Length: 0
+Date: Tue, 22 Mar 2016 10:14:50 GMT
 ```
 
-If Avro command-line tool ([avro-tools-1.7.7.jar](http://central.maven.org/maven2/org/apache/avro/avro-tools/1.7.7/avro-tools-1.7.7.jar)) is used to directly send a request to the service, an error is returned, because the command-line tool does not include the access token.
+If Avro command-line tool ([avro-tools-1.8.0.jar](http://central.maven.org/maven2/org/apache/avro/avro-tools/1.8.0/avro-tools-1.8.0.jar)) is used to directly send a request to the service, an error is returned, because the command-line tool does not include the access token.
 
 ```bash
-$ java -jar avro-tools-1.7.7.jar rpcsend http://localhost:9000/example target/schemata/example.avpr echo -data '{"message": "hello"}'
+$ java -jar avro-tools-1.8.0.jar rpcsend http://localhost:9000/example codegen/example.avpr echo -data '{"message": "hello"}'
 Exception in thread "main" java.io.IOException: Server returned HTTP response code: 401 for URL: http://localhost:9000/example
-	at sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1838)
-	at sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1439)
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1840)
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1441)
 	at org.apache.avro.ipc.HttpTransceiver.readBuffers(HttpTransceiver.java:54)
 	at org.apache.avro.ipc.Transceiver.transceive(Transceiver.java:59)
 	at org.apache.avro.ipc.Transceiver.transceive(Transceiver.java:72)
@@ -66,8 +68,8 @@ Exception in thread "main" java.io.IOException: Server returned HTTP response co
 	at org.apache.avro.ipc.Requestor.request(Requestor.java:101)
 	at org.apache.avro.ipc.generic.GenericRequestor.request(GenericRequestor.java:58)
 	at org.apache.avro.tool.RpcSendTool.run(RpcSendTool.java:101)
-	at org.apache.avro.tool.Main.run(Main.java:84)
-	at org.apache.avro.tool.Main.main(Main.java:73)
+	at org.apache.avro.tool.Main.run(Main.java:87)
+	at org.apache.avro.tool.Main.main(Main.java:76)
 ```
 
-Currently, there is no way to send a request with the access token using the Avro command-line tool. [HttpTransceiver](http://avro.apache.org/docs/1.7.7/api/java/org/apache/avro/ipc/HttpTransceiver.html) in the Avro library does not set an authorization header. To see how this is done with a custom transceiver, refer to [AsyncHttpTransceiver](https://github.com/tfeng/play-mods/blob/master/avro/app/org/apache/avro/ipc/AsyncHttpTransceiver.java) and [AuthorizationPreservingRequestPreparer](https://github.com/tfeng/play-mods/blob/master/avro/app/me/tfeng/playmods/avro/AuthorizationPreservingRequestPreparer.java).
+Currently, there is no way to send a request with the access token using the Avro command-line tool. [HttpTransceiver](http://avro.apache.org/docs/1.8.0/api/java/org/apache/avro/ipc/HttpTransceiver.html) in the Avro library does not set an authorization header. To see how this is done with a custom transceiver, refer to [AsyncHttpTransceiver](https://github.com/tfeng/play-mods/blob/master/avro/app/org/apache/avro/ipc/AsyncHttpTransceiver.java) and [AuthorizationPreservingRequestPreparer](https://github.com/tfeng/play-mods/blob/master/avro/app/me/tfeng/playmods/avro/AuthorizationPreservingRequestPreparer.java).

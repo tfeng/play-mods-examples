@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 Thomas Feng
+ * Copyright 2016 Thomas Feng
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.concurrent.CompletionStage;
 
 import org.apache.avro.AvroRemoteException;
 import org.apache.avro.Protocol;
@@ -38,6 +39,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.ipc.Ipc;
 import org.apache.avro.ipc.generic.GenericRequestor;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -49,22 +51,32 @@ import controllers.protocols.Point;
 import controllers.protocols.Points;
 import controllers.protocols.PointsClient;
 import me.tfeng.playmods.avro.AvroComponent;
-import me.tfeng.playmods.modules.SpringModule;
-import play.libs.F.Promise;
+import me.tfeng.playmods.spring.ApplicationLoader;
+import me.tfeng.playmods.spring.ExceptionWrapper;
+import me.tfeng.toolbox.spring.ApplicationManager;
+import play.Application;
+import play.ApplicationLoader.Context;
+import play.Environment;
+import play.test.TestServer;
 
 /**
  * @author Thomas Feng (huining.feng@gmail.com)
  */
 public class IntegrationTest {
 
-  private static final int TIMEOUT = Integer.MAX_VALUE;
+  private Application application;
+
+  @Before
+  public void setup() {
+    application = new ApplicationLoader().load(new Context(Environment.simple()));
+  }
 
   @Test
   public void testExampleBinaryRequest() {
-    running(testServer(3333), () -> {
-      AvroComponent avroComponent = SpringModule.getApplicationManager().getBean(AvroComponent.class);
+    TestServer server = testServer(3333, application);
+    running(server, () -> {
       try {
-        Example example = avroComponent.client(Example.class, new URL("http://localhost:3333/example"));
+        Example example = getAvroComponent().client(Example.class, new URL("http://localhost:3333/example"));
         assertThat(example.echo("Test Message"), is("Test Message"));
       } catch (Exception e) {
         throw new RuntimeException(e);
@@ -74,12 +86,12 @@ public class IntegrationTest {
 
   @Test
   public void testExampleBinaryRequestAsync() {
-    running(testServer(3333), () -> {
-      AvroComponent avroComponent = SpringModule.getApplicationManager().getBean(AvroComponent.class);
+    TestServer server = testServer(3333, application);
+    running(server, () -> {
       try {
-        ExampleClient example = avroComponent.client(ExampleClient.class, new URL("http://localhost:3333/example"));
-        Promise<String> promise = example.echo("Test Message");
-        assertThat(promise.get(TIMEOUT), is("Test Message"));
+        ExampleClient example = getAvroComponent().client(ExampleClient.class, new URL("http://localhost:3333/example"));
+        CompletionStage<String> promise = example.echo("Test Message");
+        assertThat(promise.toCompletableFuture().get(), is("Test Message"));
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -88,7 +100,7 @@ public class IntegrationTest {
 
   @Test
   public void testExampleJsonRequest() {
-    running(testServer(3333), () -> {
+    running(testServer(3333, application), () -> {
       try {
         Object response = sendJsonRequest("http://localhost:3333/example", Example.PROTOCOL, "echo",
             "{\"message\": \"Test Message\"}");
@@ -101,10 +113,10 @@ public class IntegrationTest {
 
   @Test
   public void testPointsBinaryRequest() {
-    running(testServer(3333), () -> {
-      AvroComponent avroComponent = SpringModule.getApplicationManager().getBean(AvroComponent.class);
+    TestServer server = testServer(3333, application);
+    running(server, () -> {
       try {
-        Points points = avroComponent.client(Points.class, new URL("http://localhost:3333/points"));
+        Points points = getAvroComponent().client(Points.class, new URL("http://localhost:3333/points"));
         Point center = Point.newBuilder().setX(0.0).setY(0.0).build();
 
         // []
@@ -166,117 +178,134 @@ public class IntegrationTest {
 
   @Test
   public void testPointsBinaryRequestAsync() {
-    running(testServer(3333), () -> {
-      AvroComponent avroComponent = SpringModule.getApplicationManager().getBean(AvroComponent.class);
+    TestServer server = testServer(3333, application);
+    running(server, () -> {
       try {
-        PointsClient points = avroComponent.client(PointsClient.class, new URL("http://localhost:3333/points"));
+        PointsClient points = getAvroComponent().client(PointsClient.class, new URL("http://localhost:3333/points"));
         Point center = Point.newBuilder().setX(0.0).setY(0.0).build();
 
         // []
         points.getNearestPoints(center, 1)
-            .map(response -> {
+            .thenApply(response -> {
               fail("KTooLargeError is expected");
               return null;
             })
-            .recover(error -> {
+            .exceptionally(error -> {
+              error = ExceptionWrapper.unwrap(error);
               assertThat(error, instanceOf(KTooLargeError.class));
               assertThat(((KTooLargeError) error).getK(), is(1));
               return null;
             })
-            .get(TIMEOUT);
+            .toCompletableFuture()
+            .get();
 
         // [one]
         Point one = Point.newBuilder().setX(1.0).setY(1.0).build();
-        points.addPoint(one).get(TIMEOUT);
+        points.addPoint(one).toCompletableFuture().get();
         points.getNearestPoints(center, 1)
-            .map(response -> {
+            .thenApply(response -> {
               assertThat(response, is(ImmutableList.of(one)));
               return null;
             })
-            .get(TIMEOUT);
+            .toCompletableFuture()
+            .get();
         points.getNearestPoints(center, 2)
-            .map(response -> {
+            .thenApply(response -> {
               fail("KTooLargeError is expected");
               return null;
             })
-            .recover(error -> {
+            .exceptionally(error -> {
+              error = ExceptionWrapper.unwrap(error);
               assertThat(error, instanceOf(KTooLargeError.class));
               assertThat(((KTooLargeError) error).getK(), is(2));
               return null;
             })
-            .get(TIMEOUT);
+            .toCompletableFuture()
+            .get();
 
         // [one, five]
         Point five = Point.newBuilder().setX(5.0).setY(5.0).build();
-        points.addPoint(five).get(TIMEOUT);
+        points.addPoint(five).toCompletableFuture().get();
         points.getNearestPoints(center, 1)
-            .map(response -> {
+            .thenApply(response -> {
               assertThat(response, is(ImmutableList.of(one)));
               return null;
-            }).get(TIMEOUT);
+            })
+            .toCompletableFuture()
+            .get();
         points.getNearestPoints(center, 2)
-            .map(response -> {
+            .thenApply(response -> {
               assertThat(response, is(ImmutableList.of(one, five)));
               return null;
             })
-            .get(TIMEOUT);
+            .toCompletableFuture()
+            .get();
         points.getNearestPoints(center, 3)
-            .map(response -> {
+            .thenApply(response -> {
               fail("KTooLargeError is expected");
               return null;
             })
-            .recover(error -> {
+            .exceptionally(error -> {
+              error = ExceptionWrapper.unwrap(error);
               assertThat(error, instanceOf(KTooLargeError.class));
               assertThat(((KTooLargeError) error).getK(), is(3));
               return null;
             })
-            .get(TIMEOUT);
+            .toCompletableFuture()
+            .get();
 
         // [one, five, five]
-        points.addPoint(five).get(TIMEOUT);
+        points.addPoint(five).toCompletableFuture().get();
         points.getNearestPoints(center, 1)
-            .map(response -> {
+            .thenApply(response -> {
               assertThat(response, is(ImmutableList.of(one)));
               return null;
             })
-            .get(TIMEOUT);
+            .toCompletableFuture()
+            .get();
         points.getNearestPoints(center, 2)
-            .map(response -> {
+            .thenApply(response -> {
               assertThat(response, is(ImmutableList.of(one, five)));
               return null;
             })
-            .get(TIMEOUT);
+            .toCompletableFuture()
+            .get();
         points.getNearestPoints(center, 3)
-            .map(response -> {
+            .thenApply(response -> {
               assertThat(response, is(ImmutableList.of(one, five, five)));
               return null;
             })
-            .get(TIMEOUT);
+            .toCompletableFuture()
+            .get();
         points.getNearestPoints(center, 4)
-            .map(response -> {
+            .thenApply(response -> {
               fail("KTooLargeError is expected");
               return null;
             })
-            .recover(error -> {
+            .exceptionally(error -> {
+              error = ExceptionWrapper.unwrap(error);
               assertThat(error, instanceOf(KTooLargeError.class));
               assertThat(((KTooLargeError) error).getK(), is(4));
               return null;
             })
-            .get(TIMEOUT);
+            .toCompletableFuture()
+            .get();
 
         // []
-        points.clear().get(TIMEOUT);
+        points.clear().toCompletableFuture().get();
         points.getNearestPoints(center, 1)
-            .map(response -> {
+            .thenApply(response -> {
               fail("KTooLargeError is expected");
               return null;
             })
-            .recover(error -> {
+            .exceptionally(error -> {
+              error = ExceptionWrapper.unwrap(error);
               assertThat(error, instanceOf(KTooLargeError.class));
               assertThat(((KTooLargeError) error).getK(), is(1));
               return null;
             })
-            .get(TIMEOUT);
+            .toCompletableFuture()
+            .get();
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -285,7 +314,7 @@ public class IntegrationTest {
 
   @Test
   public void testPointsJsonRequest() {
-    running(testServer(3333), () -> {
+    running(testServer(3333, application), () -> {
       try {
         String url = "http://localhost:3333/points";
         GenericData.Record record =
@@ -369,6 +398,10 @@ public class IntegrationTest {
         throw new RuntimeException(e);
       }
     });
+  }
+
+  private AvroComponent getAvroComponent() {
+    return application.injector().instanceOf(ApplicationManager.class).getBean(AvroComponent.class);
   }
 
   private Object sendJsonRequest(String url, Protocol protocol, String message, String data) throws URISyntaxException,

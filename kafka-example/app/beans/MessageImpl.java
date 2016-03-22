@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 Thomas Feng
+ * Copyright 2016 Thomas Feng
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -52,11 +52,11 @@ public class MessageImpl implements Message {
 
   private static final ALogger LOG = Logger.of(MessageImpl.class);
 
+  private Producer<String, UserMessage> producer;
+
   @Autowired(required = false)
   @Qualifier("kafka-example.producer-properties")
   private Properties producerProperties;
-
-  private Producer<String, UserMessage> producer;
 
   @Override
   public Void send(UserMessage message) {
