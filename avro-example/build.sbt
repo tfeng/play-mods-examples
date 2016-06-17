@@ -6,6 +6,6 @@ scalaVersion := "2.11.7"
 
 lazy val root = project in file(".") enablePlugins(PlayJava)
 
-libraryDependencies += "me.tfeng.play-mods" % "avro" % "0.8.7"
+libraryDependencies += "me.tfeng.play-mods" % "avro" % "0.8.8"
 
 Avro.settings
