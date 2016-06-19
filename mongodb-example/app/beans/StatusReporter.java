@@ -20,6 +20,8 @@
 
 package beans;
 
+import java.util.concurrent.CompletionStage;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -41,7 +43,13 @@ public class StatusReporter implements OplogItemHandler {
 
   @Override
   public void handle(OplogItem oplogItem) {
-    LOG.info("Storage status: " + points.countPoints() + " points; "
-        + String.format("%.3f", points.calculatePointsPerSecond()) + " points/sec");
+    CompletionStage<Long> points = this.points.countPoints();
+    CompletionStage<Double> pointsPerSecond = this.points.calculatePointsPerSecond();
+    try {
+      LOG.info("Storage status: " + points.toCompletableFuture().get() + " points; "
+          + String.format("%.3f", pointsPerSecond.toCompletableFuture().get()) + " points/sec");
+    } catch (Exception e) {
+      LOG.error("Unable to get status", e);
+    }
   }
 }

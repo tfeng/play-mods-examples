@@ -7,4 +7,4 @@ GET     /legacy/getManager      controllers.LegacyProtocolController.getManager(
 GET     /legacy/makeManager     controllers.LegacyProtocolController.makeManager(managerId: Long, employeeId: Long)
 GET     /legacy/removeEmployee  controllers.LegacyProtocolController.removeEmployee(employeeId: Long)
 
-POST    /current/:message       me.tfeng.playmods.avro.JsonIpcController.post(message, protocol = "controllers.protocols.EmployeeRegistry")
+POST    /current/:message       me.tfeng.playmods.avro.JsonIpcController.post(protocol = "controllers.protocols.EmployeeRegistry", message)

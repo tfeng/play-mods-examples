@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 import org.bson.Document;
 import org.springframework.beans.factory.InitializingBean;
@@ -32,20 +34,20 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Lists;
-import com.mongodb.MongoClient;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
+import com.mongodb.async.SingleResultCallback;
+import com.mongodb.async.client.MongoClient;
+import com.mongodb.async.client.MongoCollection;
 
 import controllers.protocols.KTooLargeError;
 import controllers.protocols.Point;
-import controllers.protocols.Points;
+import controllers.protocols.PointsClient;
 import me.tfeng.toolbox.mongodb.RecordConverter;
 
 /**
  * @author Thomas Feng (huining.feng@gmail.com)
  */
 @Component("points")
-public class PointsImpl implements InitializingBean, Points {
+public class PointsImpl implements InitializingBean, PointsClient {
 
   private static class DescendingPointComparator implements Comparator<Point> {
 
@@ -81,10 +83,11 @@ public class PointsImpl implements InitializingBean, Points {
   private long startTime;
 
   @Override
-  public Void addPoint(Point point) {
+  public CompletionStage<Void> addPoint(Point point) {
     MongoCollection<Document> collection = mongoClient.getDatabase(dbName).getCollection(dbCollection);
-    collection.insertOne(RecordConverter.toDocument(point));
-    return null;
+    CompletableFuture<Void> future = new CompletableFuture<>();
+    collection.insertOne(RecordConverter.toDocument(point), getSingleResultCallback(future));
+    return future;
   }
 
   @Override
@@ -95,39 +98,67 @@ public class PointsImpl implements InitializingBean, Points {
   }
 
   @Override
-  public void clear() {
-    collection.drop();
+  public CompletionStage<Void> clear() {
+    CompletableFuture<Void> future = new CompletableFuture<>();
+    collection.drop(getSingleResultCallback(future));
+    return future;
   }
 
   @Override
-  public List<Point> getNearestPoints(Point from, int k) throws KTooLargeError {
-    if (collection.count() < k) {
-      throw KTooLargeError.newBuilder().setValue("k is too large").setK(k).build();
-    }
-
-    FindIterable<Document> cursor = collection.find();
-    PriorityQueue<Point> queue = new PriorityQueue<>(new DescendingPointComparator(from));
-    for (Document object : cursor) {
-      Point point = RecordConverter.toRecord(Point.class, object);
-      queue.add(point);
-      if (queue.size() > k) {
-        queue.poll();
+  public CompletionStage<List<Point>> getNearestPoints(Point from, int k) {
+    CompletableFuture<Void> checkCountFuture = new CompletableFuture<>();
+    collection.count((count, throwable) -> {
+      if (throwable == null) {
+        if (count < k) {
+          checkCountFuture.completeExceptionally(KTooLargeError.newBuilder().setValue("k is too large").setK(k).build());
+        } else {
+          checkCountFuture.complete(null);
+        }
+      } else {
+        checkCountFuture.completeExceptionally(throwable);
       }
-    }
-    List<Point> points = new ArrayList<>(queue.size());
-    while (!queue.isEmpty()) {
-      points.add(queue.poll());
-    }
-    return Lists.reverse(points);
+    });
+
+    return checkCountFuture.thenCompose(nothing -> {
+      CompletableFuture<Void> insertQueueFuture = new CompletableFuture<>();
+      PriorityQueue<Point> queue = new PriorityQueue<>(new DescendingPointComparator(from));
+      collection.find()
+          .map(document -> RecordConverter.toRecord(Point.class, document))
+          .forEach(point -> {
+            queue.add(point);
+            if (queue.size() > k) {
+              queue.poll();
+            }
+          }, getSingleResultCallback(insertQueueFuture));
+
+      return insertQueueFuture.thenApply(nothing2 -> {
+        List<Point> points = new ArrayList<>(queue.size());
+        while (!queue.isEmpty()) {
+          points.add(queue.poll());
+        }
+        return Lists.reverse(points);
+      });
+    });
   }
 
-  protected double calculatePointsPerSecond() {
+  protected CompletionStage<Double> calculatePointsPerSecond() {
     long current = System.currentTimeMillis();
-    long points = countPoints();
-    return (double) points * 1000 / (current - startTime);
+    return countPoints().thenApply(points -> (double) points * 1000 / (current - startTime));
   }
 
-  protected long countPoints() {
-    return collection.count();
+  protected CompletionStage<Long> countPoints() {
+    CompletableFuture<Long> future = new CompletableFuture<>();
+    collection.count(getSingleResultCallback(future));
+    return future;
+  }
+
+  private <T> SingleResultCallback<T> getSingleResultCallback(CompletableFuture<T> future) {
+    return (result, throwable) -> {
+      if (throwable == null) {
+        future.complete(result);
+      } else {
+        future.completeExceptionally(throwable);
+      }
+    };
   }
 }

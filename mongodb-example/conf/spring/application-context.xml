@@ -20,9 +20,12 @@
     <entry key="controllers.protocols.Points" value-ref="points" />
   </util:map>
 
-  <bean id="mongoClient" class="com.mongodb.MongoClient">
-    <constructor-arg value="${mongodb-example.db-host}" />
-    <constructor-arg value="${mongodb-example.db-port}" />
+  <bean id="mongoClient" class="com.mongodb.async.client.MongoClients" factory-method="create">
+    <constructor-arg>
+      <bean class="com.mongodb.ConnectionString">
+        <constructor-arg value="mongodb://${mongodb-example.db-host}:${mongodb-example.db-port}" />
+      </bean>
+    </constructor-arg>
   </bean>
 
   <bean class="me.tfeng.toolbox.mongodb.OplogListener">

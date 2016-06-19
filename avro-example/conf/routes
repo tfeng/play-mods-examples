@@ -1,4 +1,4 @@
 POST    /example             me.tfeng.playmods.avro.BinaryIpcController.post(protocol = "controllers.protocols.Example")
 POST    /points              me.tfeng.playmods.avro.BinaryIpcController.post(protocol = "controllers.protocols.Points")
-POST    /example/:message    me.tfeng.playmods.avro.JsonIpcController.post(message, protocol = "controllers.protocols.Example")
-POST    /points/:message     me.tfeng.playmods.avro.JsonIpcController.post(message, protocol = "controllers.protocols.Points")
+POST    /example/:message    me.tfeng.playmods.avro.JsonIpcController.post(protocol = "controllers.protocols.Example", message)
+POST    /points/:message     me.tfeng.playmods.avro.JsonIpcController.post(protocol = "controllers.protocols.Points", message)
