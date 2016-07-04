@@ -7,7 +7,7 @@ scalaVersion := "2.11.7"
 lazy val root = project in file(".") enablePlugins(PlayJava)
 
 libraryDependencies ++= Seq(
-  "me.tfeng.play-mods" % "dust" % "0.8.9",
+  "me.tfeng.play-mods" % "dust" % "0.9.0",
   javaWs % "test"
 )
 
