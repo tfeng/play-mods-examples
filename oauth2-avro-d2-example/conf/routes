@@ -1,6 +1,9 @@
++ nocsrf
 POST    /example                    controllers.Application.postAvroBinary()
 GET     /proxy                      controllers.Application.invoke(message ?= "message from client")
 
 POST    /client/authenticate        controllers.AuthenticationController.authenticateClient()
++ nocsrf
 POST    /user/authenticate          controllers.AuthenticationController.authenticateUser()
++ nocsrf
 POST    /user/refresh               controllers.AuthenticationController.refreshUserAccessToken()

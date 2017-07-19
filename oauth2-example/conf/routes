@@ -1,5 +1,7 @@
 GET     /user/get                   controllers.Application.userDetails()
 
 POST    /client/authenticate        controllers.AuthenticationController.authenticateClient()
++ nocsrf
 POST    /user/authenticate          controllers.AuthenticationController.authenticateUser()
++ nocsrf
 POST    /user/refresh               controllers.AuthenticationController.refreshUserAccessToken()
