@@ -21,22 +21,18 @@
 package beans;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import controllers.protocols.UserMessage;
-import kafka.consumer.Consumer;
-import kafka.consumer.ConsumerConfig;
-import kafka.consumer.ConsumerIterator;
-import kafka.consumer.KafkaStream;
 import kafka.javaapi.consumer.ConsumerConnector;
-import me.tfeng.toolbox.avro.AvroHelper;
 import me.tfeng.toolbox.spring.ExtendedStartable;
 import play.Logger;
 import play.Logger.ALogger;
@@ -52,21 +48,17 @@ public class ConsumerStartable implements ExtendedStartable {
 
     private static final ALogger LOG = Logger.of(ConsumerRunnable.class);
 
-    private final KafkaStream<byte[], byte[]> stream;
+    private final KafkaConsumer<String, UserMessage> consumer;
 
-    public ConsumerRunnable(KafkaStream<byte[], byte[]> stream) {
-      this.stream = stream;
+    public ConsumerRunnable(KafkaConsumer<String, UserMessage> consumer) {
+      this.consumer = consumer;
     }
 
     @Override
     public void run() {
-      ConsumerIterator<byte[], byte[]> iterator = stream.iterator();
-      while (iterator.hasNext()) {
-        try {
-          UserMessage message = AvroHelper.decodeRecord(UserMessage.class, iterator.next().message());
-          LOG.info("Consuming message: " + message);
-        } catch (Throwable t) {
-          LOG.error("Unable to consume message", t);
+      while (true) {
+        for (ConsumerRecord<String, UserMessage> record : consumer.poll(1000)) {
+          LOG.info("Consuming message: " + record.value());
         }
       }
     }
@@ -82,12 +74,9 @@ public class ConsumerStartable implements ExtendedStartable {
 
   @Override
   public void afterStart() {
-    consumer = Consumer.createJavaConsumerConnector(new ConsumerConfig(consumerProperties));
-    List<KafkaStream<byte[], byte[]>> streams =
-        consumer.createMessageStreams(Collections.singletonMap(Constants.TOPIC, 1)).get(Constants.TOPIC);
-    for (KafkaStream<byte[], byte[]> stream : streams) {
-      scheduler.execute(new ConsumerRunnable(stream));
-    }
+    KafkaConsumer<String, UserMessage> consumer = new KafkaConsumer<>(consumerProperties);
+    consumer.subscribe(Collections.singletonList(Constants.TOPIC));
+    scheduler.execute(new ConsumerRunnable(consumer));
   }
 
   @Override

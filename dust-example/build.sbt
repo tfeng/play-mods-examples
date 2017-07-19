@@ -2,12 +2,12 @@ name := "dust-example"
 
 version := "1.0.0-SNAPSHOT"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.12.2"
 
 lazy val root = project in file(".") enablePlugins(PlayJava)
 
 libraryDependencies ++= Seq(
-  "me.tfeng.play-mods" % "dust" % "0.9.8",
+  "me.tfeng.play-mods" % "dust" % "0.10.0-SNAPSHOT",
   javaWs % "test"
 )
 

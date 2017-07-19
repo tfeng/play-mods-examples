@@ -90,7 +90,7 @@ public class SystemStartable implements Startable {
     propertiesStream = getClass().getClassLoader().getResourceAsStream("server.properties");
     kafkaProperties.load(propertiesStream);
     kafkaProperties.setProperty("log.dirs", kafkaDirectory.getAbsolutePath());
-    KafkaConfig kafkaConfig = new KafkaConfig(kafkaProperties);
+    KafkaConfig kafkaConfig = KafkaConfig.fromProps(kafkaProperties);
     kafkaServer = new KafkaServerStartable(kafkaConfig);
     kafkaServer.startup();
 

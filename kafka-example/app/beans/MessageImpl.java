@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -52,7 +54,7 @@ public class MessageImpl implements Message {
 
   private static final ALogger LOG = Logger.of(MessageImpl.class);
 
-  private Producer<String, UserMessage> producer;
+  private KafkaProducer<String, UserMessage> producer;
 
   @Autowired(required = false)
   @Qualifier("kafka-example.producer-properties")
@@ -61,7 +63,7 @@ public class MessageImpl implements Message {
   @Override
   public Void send(UserMessage message) {
     if (producer == null) {
-      producer = new Producer<>(new ProducerConfig(producerProperties));
+      producer = new KafkaProducer<>(producerProperties);
     }
 
     Request request = Controller.request();
@@ -80,7 +82,7 @@ public class MessageImpl implements Message {
     LOG.info("Producing message: " + message);
 
     try {
-      producer.send(new KeyedMessage<String, UserMessage>(Constants.TOPIC, message.getSubject(), message));
+      producer.send(new ProducerRecord<>(Constants.TOPIC, message.getSubject(), message));
       return null;
     } catch (Exception e) {
       throw new RuntimeException("Unable to send Kafka event for message: " + message, e);

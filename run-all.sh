@@ -1,7 +1,9 @@
 #!/bin/sh
 
+export TERM=xterm-color
+
 for dir in *-example; do
-  if (cd $dir; activator $@); then
+  if (cd $dir; sbt $@); then
     echo "Test(s) succeeded in $dir"
   else
     echo "Test(s) failed in $dir"

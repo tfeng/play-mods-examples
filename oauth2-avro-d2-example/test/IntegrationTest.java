@@ -75,7 +75,7 @@ public class IntegrationTest {
         if (requestPreparer != null) {
           requestPreparer.prepare(builder, contentType, url);
         }
-        builder.setHeader("Authorization", "Bearer " + authorizationToken);
+        builder.addHeader("Authorization", "Bearer " + authorizationToken);
       });
     }
   }
