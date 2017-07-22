@@ -5,7 +5,7 @@ A simple example that demonstrates how to create an [Avro IPC (Inter-Process Com
 
 ---
 
-Run the server with ```activator run```.
+Run the server with ```sbt run```.
 
 The ```routes``` files contains 4 endpoints, all supporting only ```POST``` type of HTTP requests.
 * /example and /points: These endpoints accept Avro binary requests, which should have ```Content-Type: avro/binary``` header.
@@ -15,27 +15,27 @@ The ```routes``` files contains 4 endpoints, all supporting only ```POST``` type
 
 #### Sending binary request with Avro command-line tool
 
-Avro command-line tool ([avro-tools-1.8.0.jar](http://central.maven.org/maven2/org/apache/avro/avro-tools/1.8.0/avro-tools-1.8.0.jar)) requires protocol (.avpr) files while sending requests to a server. Therefore, for this example, one must first generate the protocol files from the Avro IDL files (.avdl). Specification of Avro IDL can be found [here](http://avro.apache.org/docs/current/idl.html).
+Avro command-line tool ([avro-tools-1.8.2.jar](http://central.maven.org/maven2/org/apache/avro/avro-tools/1.8.2/avro-tools-1.8.2.jar)) requires protocol (.avpr) files while sending requests to a server. Therefore, for this example, one must first generate the protocol files from the Avro IDL files (.avdl). Specification of Avro IDL can be found [here](http://avro.apache.org/docs/current/idl.html).
 
-Run ```activator compile``` before ```activator run``` to have those protocol files generated.
+Run ```sbt compile``` before ```sbt run``` to have those protocol files generated.
 
 ##### /example
 
 ```bash
-$ java -jar avro-tools-1.8.0.jar rpcsend http://localhost:9000/example codegen/example.avpr echo -data '{"message": "hello"}'
+$ java -jar avro-tools-1.8.2.jar rpcsend http://localhost:9000/example codegen/example.avpr echo -data '{"message": "hello"}'
 "hello"
 ```
 
 ##### /points
 
 ```bash
-$ java -jar avro-tools-1.8.0.jar rpcsend http://localhost:9000/points codegen/points.avpr addPoint -data '{"point": {"x": 1.0, "y": 1.0}}'
+$ java -jar avro-tools-1.8.2.jar rpcsend http://localhost:9000/points codegen/points.avpr addPoint -data '{"point": {"x": 1.0, "y": 1.0}}'
 null
 
-$ java -jar avro-tools-1.8.0.jar rpcsend http://localhost:9000/points codegen/points.avpr addPoint -data '{"point": {"x": -0.5, "y": -0.5}}'
+$ java -jar avro-tools-1.8.2.jar rpcsend http://localhost:9000/points codegen/points.avpr addPoint -data '{"point": {"x": -0.5, "y": -0.5}}'
 null
 
-$ java -jar avro-tools-1.8.0.jar rpcsend http://localhost:9000/points codegen/points.avpr getNearestPoints -data '{"from": {"x": 0, "y": 0}, "k": 2}'
+$ java -jar avro-tools-1.8.2.jar rpcsend http://localhost:9000/points codegen/points.avpr getNearestPoints -data '{"from": {"x": 0, "y": 0}, "k": 2}'
 [ {
   "x" : -0.5,
   "y" : -0.5
@@ -44,10 +44,10 @@ $ java -jar avro-tools-1.8.0.jar rpcsend http://localhost:9000/points codegen/po
   "y" : 1.0
 } ]
 
-$ java -jar avro-tools-1.8.0.jar rpcsend http://localhost:9000/points codegen/points.avpr clear -data ''
+$ java -jar avro-tools-1.8.2.jar rpcsend http://localhost:9000/points codegen/points.avpr clear -data ''
 null
 
-$ java -jar avro-tools-1.8.0.jar rpcsend http://localhost:9000/points codegen/points.avpr getNearestPoints -data '{"from": {"x": 0, "y": 0}, "k": 2}'
+$ java -jar avro-tools-1.8.2.jar rpcsend http://localhost:9000/points codegen/points.avpr getNearestPoints -data '{"from": {"x": 0, "y": 0}, "k": 2}'
 Exception in thread "main" org.apache.avro.AvroRemoteException: {"k": 2}
 	at org.apache.avro.ipc.generic.GenericRequestor.readError(GenericRequestor.java:101)
 	at org.apache.avro.ipc.Requestor$Response.getResponse(Requestor.java:554)

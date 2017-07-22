@@ -16,7 +16,7 @@ This example is a simple use case of Kafka. An IPC (Inter-Process Communication)
 
 #### Manual testing
 
-Run with ```activator run```.
+Run with ```sbt run```.
 
 When the application is started, it first creates a ZooKeeper server and a Kafka Server using two temporary directories as data storage. Then it creates the topic ```kafka-example```, under which the producer is going to produce Kafka events.
 

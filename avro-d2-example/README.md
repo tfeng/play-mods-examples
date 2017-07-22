@@ -86,7 +86,7 @@ When a machine is disconnected (either by proper shutdown or because of a failur
 
 #### Manual testing
 
-Run with ```activator run```.
+Run with ```sbt run```.
 
 When the application is started, it first creates a ZooKeeper server using a temporary directory as data storage. Then it registers its own URL with that ZooKeeper server.
 
@@ -100,7 +100,7 @@ There are two ways to send requests to this single-machine service:
 Using the service's URL, requests are sent essentially in the same way as not using D2. (See a similar Avro IPC example [here](https://github.com/tfeng/play-mods-examples/tree/master/avro-example).)
 
 ```bash
-$ java -jar avro-tools-1.8.0.jar rpcsend http://localhost:9000/example codegen/example.avpr echo -data '{"message": "hello"}'
+$ java -jar avro-tools-1.8.2.jar rpcsend http://localhost:9000/example codegen/example.avpr echo -data '{"message": "hello"}'
 "hello"
 ```
 

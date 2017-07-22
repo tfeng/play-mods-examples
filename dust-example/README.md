@@ -5,7 +5,7 @@ An example to show how to render messages with [LinkedIn Dust.js](http://linkedi
 
 ---
 
-Run with ```activator run```.
+Run with ```sbt run```.
 
 This example uses [Play Dust module](https://github.com/tfeng/play-mods/tree/master/dust). The module compiles Dust templates (.js files) to JavaScripts in the compilation phase. At run time, those JavaScripts are loaded and rendered using either Java 8's [Nashorn](http://openjdk.java.net/projects/nashorn/) engine or standalone [Node.js](https://nodejs.org/) processes.
 
@@ -19,9 +19,9 @@ $ curl 'http://localhost:9000?name=Amy'
 Hello, Amy!
 ```
 
-For performance reason, as described above, Dust-to-JavaScript compilation happens at compile time. If one runs the server with ```activator start``` (in production mode), the compiled JavaScript files are included in the package, but not the Dust templates (.tl files).
+For performance reason, as described above, Dust-to-JavaScript compilation happens at compile time. If one runs the server with ```sbt start``` (in production mode), the compiled JavaScript files are included in the package, but not the Dust templates (.tl files).
 
-For improved performance, one may execute JavaScripts with Node.js instead of Nashorn. Uncomment the properties in ```conf/dust.properties``` and set the correct path to Node.js. Execute ```activator run``` again.
+For improved performance, one may execute JavaScripts with Node.js instead of Nashorn. Uncomment the properties in ```conf/dust.properties``` and set the correct path to Node.js. Execute ```sbt run``` again.
 
 ```
 $ curl 'http://localhost:9000'

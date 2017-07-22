@@ -27,12 +27,14 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import controllers.protocols.UserMessage;
-import kafka.javaapi.consumer.ConsumerConnector;
+import me.tfeng.toolbox.kafka.AvroDecoder;
 import me.tfeng.toolbox.spring.ExtendedStartable;
 import play.Logger;
 import play.Logger.ALogger;
@@ -64,8 +66,6 @@ public class ConsumerStartable implements ExtendedStartable {
     }
   }
 
-  private ConsumerConnector consumer;
-
   @Autowired
   @Qualifier("kafka-example.consumer-properties")
   private Properties consumerProperties;
@@ -74,7 +74,10 @@ public class ConsumerStartable implements ExtendedStartable {
 
   @Override
   public void afterStart() {
-    KafkaConsumer<String, UserMessage> consumer = new KafkaConsumer<>(consumerProperties);
+    KafkaConsumer<String, UserMessage> consumer = new KafkaConsumer<String, UserMessage>(
+        consumerProperties,
+        new StringDeserializer(),
+        new AvroDecoder<UserMessage>());
     consumer.subscribe(Collections.singletonList(Constants.TOPIC));
     scheduler.execute(new ConsumerRunnable(consumer));
   }
@@ -89,7 +92,6 @@ public class ConsumerStartable implements ExtendedStartable {
 
   @Override
   public void beforeStop() {
-    consumer.shutdown();
     scheduler.shutdown();
   }
 
