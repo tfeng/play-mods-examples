@@ -35,7 +35,7 @@ connecting to: localhost:27017/test
 >
 ```
 
-Run the example with ```activator run```.
+Run the example with ```sbt run```.
 
 #### Manual testing
 

@@ -77,7 +77,7 @@ public class ConsumerStartable implements ExtendedStartable {
     KafkaConsumer<String, UserMessage> consumer = new KafkaConsumer<String, UserMessage>(
         consumerProperties,
         new StringDeserializer(),
-        new AvroDecoder<UserMessage>());
+        new AvroDecoder<>(UserMessage.class));
     consumer.subscribe(Collections.singletonList(Constants.TOPIC));
     scheduler.execute(new ConsumerRunnable(consumer));
   }

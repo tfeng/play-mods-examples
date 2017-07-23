@@ -18,8 +18,9 @@
  * limitations under the License.
  */
 
-import static org.hamcrest.core.Is.is;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static play.test.Helpers.running;
 import static play.test.Helpers.testServer;
@@ -30,17 +31,14 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Properties;
 
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.Before;
 import org.junit.Test;
 
 import controllers.protocols.MessageClient;
 import controllers.protocols.UserMessage;
-import kafka.consumer.Consumer;
-import kafka.consumer.ConsumerConfig;
-import kafka.consumer.ConsumerIterator;
-import kafka.consumer.KafkaStream;
-import kafka.javaapi.consumer.ConsumerConnector;
-import kafka.serializer.StringDecoder;
 import me.tfeng.playmods.avro.AvroComponent;
 import me.tfeng.playmods.spring.ApplicationLoader;
 import me.tfeng.toolbox.kafka.AvroDecoder;
@@ -76,10 +74,11 @@ public class IntegrationTest {
         InputStream propertiesStream = getClass().getClassLoader().getResourceAsStream("test-consumer.properties");
         consumerProperties.load(propertiesStream);
 
-        ConsumerConnector consumer = Consumer.createJavaConsumerConnector(new ConsumerConfig(consumerProperties));
-        KafkaStream<String, UserMessage> stream = consumer.createMessageStreams(
-            Collections.singletonMap(Constants.TOPIC, 1), new StringDecoder(null),
-            new AvroDecoder<>(UserMessage.class)).get(Constants.TOPIC).get(0);
+        KafkaConsumer<String, UserMessage> consumer = new KafkaConsumer<String, UserMessage>(
+            consumerProperties,
+            new StringDeserializer(),
+            new AvroDecoder<>(UserMessage.class));
+        consumer.subscribe(Collections.singletonList(Constants.TOPIC));
 
         MessageClient client =
             getAvroComponent().client(MessageClient.class, new URL("http", "localhost", PORT, "/message"));
@@ -89,24 +88,24 @@ public class IntegrationTest {
             .setObject("books")
             .setRequestHeader(null)
             .build();
-        client.send(messageOut).toCompletableFuture().get();
+        client.send(messageOut).toCompletableFuture();
 
-        ConsumerIterator<String, UserMessage> iterator = stream.iterator();
-        assertThat(iterator.hasNext(), is(true));
+        ConsumerRecords<String, UserMessage> consumerRecords = consumer.poll(10000);
+        assertFalse(consumerRecords.isEmpty());
 
-        UserMessage messageIn = iterator.next().message();
-        assertThat(messageIn.getSubject(), is("Raymond"));
-        assertThat(messageIn.getAction(), is("reads"));
-        assertThat(messageIn.getObject(), is("books"));
-        assertThat(messageIn.getRequestHeader().getRemoteAddress(), is("127.0.0.1"));
-        assertThat(messageIn.getRequestHeader().getHost(), is("localhost:3333"));
-        assertThat(messageIn.getRequestHeader().getMethod(), is("POST"));
-        assertThat(messageIn.getRequestHeader().getPath(), is("/message"));
-        assertThat(messageIn.getRequestHeader().getQuery(), is(Collections.emptyMap()));
-        assertThat(messageIn.getRequestHeader().getSecure(), is(false));
+        UserMessage messageIn = consumerRecords.iterator().next().value();
+        assertEquals(messageIn.getSubject(), "Raymond");
+        assertEquals(messageIn.getAction(), "reads");
+        assertEquals(messageIn.getObject(), "books");
+        assertEquals(messageIn.getRequestHeader().getRemoteAddress(), "127.0.0.1");
+        assertEquals(messageIn.getRequestHeader().getHost(), "localhost:3333");
+        assertEquals(messageIn.getRequestHeader().getMethod(), "POST");
+        assertEquals(messageIn.getRequestHeader().getPath(), "/message");
+        assertEquals(messageIn.getRequestHeader().getQuery(), Collections.emptyMap());
+        assertFalse(messageIn.getRequestHeader().getSecure());
         assertThat(messageIn.getRequestHeader().getTimestamp(), greaterThan(beginning.getTime()));
 
-        consumer.shutdown();
+        consumer.close();
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
