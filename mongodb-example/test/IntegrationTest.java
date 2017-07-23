@@ -24,12 +24,15 @@ import static org.junit.Assert.assertThat;
 import static play.test.Helpers.running;
 import static play.test.Helpers.testServer;
 
+import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import akka.stream.javadsl.StreamConverters;
 import controllers.protocols.Point;
 import controllers.protocols.Points;
 import me.tfeng.playmods.spring.ApplicationLoader;
@@ -37,9 +40,9 @@ import me.tfeng.toolbox.avro.AvroHelper;
 import play.Application;
 import play.ApplicationLoader.Context;
 import play.Environment;
-import play.libs.ws.WS;
-import play.libs.ws.WSClient;
-import play.libs.ws.WSResponse;
+import play.libs.ws.SourceBodyWritable;
+import play.libs.ws.StandaloneWSResponse;
+import play.libs.ws.ahc.StandaloneAhcWSClient;
 
 /**
  * @author Thomas Feng (huining.feng@gmail.com)
@@ -59,31 +62,19 @@ public class IntegrationTest {
   public void testOneNearestPoint() {
     running(testServer(PORT, application), () -> {
       try {
-        WSResponse response;
+        StandaloneAhcWSClient client = application.injector().instanceOf(StandaloneAhcWSClient.class);
+        StandaloneWSResponse response;
         List<Point> nearestPoints;
-        WSClient client = WS.newClient(PORT);
 
-        response = client.url("/points/addPoint")
-            .setContentType("avro/json")
-            .post("{\"point\": {\"x\": 1.0, \"y\": 2.0}}")
-            .toCompletableFuture()
-            .get();
+        response = post(client, "/points/addPoint", "{\"point\": {\"x\": 1.0, \"y\": 2.0}}");
         assertThat(response.getStatus(), is(200));
         assertThat(response.getBody(), is("null"));
 
-        response = client.url("/points/addPoint")
-            .setContentType("avro/json")
-            .post("{\"point\": {\"x\": 3.0, \"y\": 0.5}}")
-            .toCompletableFuture()
-            .get();
+        response = post(client, "/points/addPoint", "{\"point\": {\"x\": 3.0, \"y\": 0.5}}");
         assertThat(response.getStatus(), is(200));
         assertThat(response.getBody(), is("null"));
 
-        response = client.url("/points/getNearestPoints")
-            .setContentType("avro/json")
-            .post("{\"from\": {\"x\": 0.0, \"y\": 0.0}, \"k\": 1}")
-            .toCompletableFuture()
-            .get();
+        response = post(client, "/points/getNearestPoints", "{\"from\": {\"x\": 0.0, \"y\": 0.0}, \"k\": 1}");
         assertThat(response.getStatus(), is(200));
         nearestPoints = AvroHelper.toRecord(Points.PROTOCOL.getMessages().get("getNearestPoints").getResponse(),
             response.getBody());
@@ -101,39 +92,24 @@ public class IntegrationTest {
   public void testThreeNearestPoints() {
     running(testServer(PORT, application), () -> {
       try {
-        WSResponse response;
+        StandaloneAhcWSClient client = application.injector().instanceOf(StandaloneAhcWSClient.class);
+        StandaloneWSResponse response;
         List<Point> nearestPoints;
-        WSClient client = WS.newClient(PORT);
 
-        response = client.url("/points/addPoint")
-            .setContentType("avro/json")
-            .post("{\"point\": {\"x\": 1.0, \"y\": 2.0}}")
-            .toCompletableFuture()
-            .get();
+        response = post(client, "/points/addPoint", "{\"point\": {\"x\": 1.0, \"y\": 2.0}}");
         assertThat(response.getStatus(), is(200));
         assertThat(response.getBody(), is("null"));
 
-        response = client.url("/points/addPoint")
-            .setContentType("avro/json")
-            .post("{\"point\": {\"x\": 3.0, \"y\": 0.5}}")
-            .toCompletableFuture()
-            .get();
+        response = post(client, "/points/addPoint", "{\"point\": {\"x\": 3.0, \"y\": 0.5}}");
         assertThat(response.getStatus(), is(200));
         assertThat(response.getBody(), is("null"));
 
-        response = client.url("/points/addPoint")
-            .setContentType("avro/json")
-            .post("{\"point\": {\"id\": \"53fdf8429436cecb91d26cfa\", \"x\": 2.1, \"y\": 1.8}}")
-            .toCompletableFuture()
-            .get();
+        response = post(client, "/points/addPoint",
+            "{\"point\": {\"id\": \"53fdf8429436cecb91d26cfa\", \"x\": 2.1, \"y\": 1.8}}");
         assertThat(response.getStatus(), is(200));
         assertThat(response.getBody(), is("null"));
 
-        response = client.url("/points/getNearestPoints")
-            .setContentType("avro/json")
-            .post("{\"from\": {\"x\": 0.0, \"y\": 0.0}, \"k\": 3}")
-            .toCompletableFuture()
-            .get();
+        response = post(client, "/points/getNearestPoints", "{\"from\": {\"x\": 0.0, \"y\": 0.0}, \"k\": 3}");
         assertThat(response.getStatus(), is(200));
         nearestPoints = AvroHelper.toRecord(Points.PROTOCOL.getMessages().get("getNearestPoints").getResponse(),
             response.getBody());
@@ -157,5 +133,14 @@ public class IntegrationTest {
         throw new RuntimeException(e);
       }
     });
+  }
+
+  private StandaloneWSResponse post(StandaloneAhcWSClient client, String endpoint, String data)
+      throws ExecutionException, InterruptedException {
+    return client.url("http://localhost:" + PORT + endpoint)
+        .setContentType("avro/json")
+        .post(new SourceBodyWritable(StreamConverters.fromInputStream(() -> new ByteArrayInputStream(data.getBytes()))))
+        .toCompletableFuture()
+        .get();
   }
 }

@@ -35,9 +35,8 @@ import me.tfeng.playmods.spring.ApplicationLoader;
 import play.Application;
 import play.ApplicationLoader.Context;
 import play.Environment;
-import play.libs.ws.WS;
-import play.libs.ws.WSClient;
-import play.libs.ws.WSResponse;
+import play.libs.ws.StandaloneWSResponse;
+import play.libs.ws.ahc.StandaloneAhcWSClient;
 
 /**
  * @author Thomas Feng (huining.feng@gmail.com)
@@ -57,9 +56,9 @@ public class IntegrationTest {
   public void testD2Request() {
     running(testServer(PORT, application), () -> {
       try {
-        WSClient client = WS.newClient(PORT);
-        WSResponse response = client.url("/proxy")
-            .setQueryParameter("message", "Test Message through Client")
+        StandaloneAhcWSClient client = application.injector().instanceOf(StandaloneAhcWSClient.class);
+        StandaloneWSResponse response = client.url("http://localhost:" + PORT + "/proxy")
+            .addQueryParameter("message", "Test Message through Client")
             .get()
             .toCompletableFuture()
             .get();

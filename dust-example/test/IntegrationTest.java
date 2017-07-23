@@ -31,10 +31,9 @@ import me.tfeng.playmods.spring.ExceptionWrapper;
 import play.Application;
 import play.ApplicationLoader.Context;
 import play.Environment;
-import play.libs.ws.WS;
-import play.libs.ws.WSClient;
-import play.libs.ws.WSRequest;
-import play.libs.ws.WSResponse;
+import play.libs.ws.StandaloneWSRequest;
+import play.libs.ws.StandaloneWSResponse;
+import play.libs.ws.ahc.StandaloneAhcWSClient;
 
 /**
  * @author Thomas Feng (huining.feng@gmail.com)
@@ -53,9 +52,9 @@ public class IntegrationTest {
   @Test
   public void testCustomName() {
     running(testServer(PORT, application), () -> {
-      WSClient client = WS.newClient(PORT);
-      WSRequest request = client.url("/").setQueryParameter("name", "Amy");
-      WSResponse response = ExceptionWrapper.wrap(() -> request.get().toCompletableFuture().get());
+      StandaloneAhcWSClient client = application.injector().instanceOf(StandaloneAhcWSClient.class);
+      StandaloneWSRequest request = client.url("http://localhost:" + PORT + "/").addQueryParameter("name", "Amy");
+      StandaloneWSResponse response = ExceptionWrapper.wrap(() -> request.get().toCompletableFuture().get());
       assertThat(response.getBody(), is("Hello, Amy!"));
     });
   }
@@ -63,9 +62,9 @@ public class IntegrationTest {
   @Test
   public void testDefaultName() {
     running(testServer(PORT, application), () -> {
-      WSClient client = WS.newClient(PORT);
-      WSRequest request = client.url("/");
-      WSResponse response = ExceptionWrapper.wrap(() -> request.get().toCompletableFuture().get());
+      StandaloneAhcWSClient client = application.injector().instanceOf(StandaloneAhcWSClient.class);
+      StandaloneWSRequest request = client.url("http://localhost:" + PORT + "/");
+      StandaloneWSResponse response = ExceptionWrapper.wrap(() -> request.get().toCompletableFuture().get());
       assertThat(response.getBody(), is("Hello, Thomas!"));
     });
   }

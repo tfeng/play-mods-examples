@@ -23,8 +23,10 @@ import static org.junit.Assert.assertThat;
 import static play.test.Helpers.running;
 import static play.test.Helpers.testServer;
 
+import java.io.ByteArrayInputStream;
 import java.net.URL;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.ipc.specific.SpecificRequestor;
@@ -33,6 +35,7 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 
+import akka.stream.javadsl.StreamConverters;
 import controllers.protocols.Date;
 import controllers.protocols.Employee;
 import controllers.protocols.EmployeeRegistry;
@@ -42,9 +45,10 @@ import me.tfeng.playmods.spring.ExceptionWrapper;
 import play.Application;
 import play.ApplicationLoader.Context;
 import play.Environment;
-import play.libs.ws.WS;
-import play.libs.ws.WSClient;
-import play.libs.ws.WSResponse;
+import play.libs.ws.SourceBodyWritable;
+import play.libs.ws.StandaloneWSResponse;
+import play.libs.ws.ahc.StandaloneAhcWSClient;
+import play.libs.ws.ahc.StandaloneAhcWSRequest;
 
 /**
  * @author Thomas Feng (huining.feng@gmail.com)
@@ -65,86 +69,49 @@ public class IntegrationTest {
   @Test
   public void testD2RequestWithCurrentProtocol() {
     running(testServer(PORT, application), ExceptionWrapper.wrapFunction(() -> {
-      WSResponse response;
-      WSClient client = WS.newClient(PORT);
+      StandaloneAhcWSClient client = application.injector().instanceOf(StandaloneAhcWSClient.class);
+      StandaloneWSResponse response;
 
-      response = client.url("/current/countEmployees")
-          .setHeader("Content-Type", "avro/json")
-          .post("")
-          .toCompletableFuture()
-          .get();
+      response = post(client, "/current/countEmployees", "");
       assertThat(response.getStatus(), is(200));
       assertThat(Integer.parseInt(response.getBody()), is(0));
 
-      response = client.url("/current/addEmployee")
-          .setHeader("Content-Type", "avro/json")
-          .post("{\"employee\": {\"firstName\": \"Thomas\", \"lastName\": \"Feng\", \"gender\": \"MALE\", \"dateOfBirth\": {\"year\": 2000, \"month\": 1, \"day\": 1}}}")
-          .toCompletableFuture()
-          .get();
+      response = post(client, "/current/addEmployee",
+          "{\"employee\": {\"firstName\": \"Thomas\", \"lastName\": \"Feng\", \"gender\": \"MALE\", \"dateOfBirth\": {\"year\": 2000, \"month\": 1, \"day\": 1}}}");
       assertThat(response.getStatus(), is(200));
       assertThat(Long.parseLong(response.getBody()), is(1l));
 
-      response = client.url("/current/addEmployee")
-          .setHeader("Content-Type", "avro/json")
-          .post("{\"employee\": {\"firstName\": \"Jackson\", \"lastName\": \"Wang\", \"gender\": \"MALE\", \"dateOfBirth\": {\"year\": 2001, \"month\": 5, \"day\": 15}}}")
-          .toCompletableFuture()
-          .get();
+      response = post(client, "/current/addEmployee",
+          "{\"employee\": {\"firstName\": \"Jackson\", \"lastName\": \"Wang\", \"gender\": \"MALE\", \"dateOfBirth\": {\"year\": 2001, \"month\": 5, \"day\": 15}}}");
       assertThat(response.getStatus(), is(200));
       assertThat(Long.parseLong(response.getBody()), is(2l));
 
-      response = client.url("/current/addEmployee")
-          .setHeader("Content-Type", "avro/json")
-          .post("{\"employee\": {\"firstName\": \"Christine\", \"lastName\": \"Lee\", \"gender\": \"FEMALE\", \"dateOfBirth\": {\"year\": 2000, \"month\": 8, \"day\": 20}}}")
-          .toCompletableFuture()
-          .get();
+      response = post(client, "/current/addEmployee",
+          "{\"employee\": {\"firstName\": \"Christine\", \"lastName\": \"Lee\", \"gender\": \"FEMALE\", \"dateOfBirth\": {\"year\": 2000, \"month\": 8, \"day\": 20}}}");
       assertThat(response.getStatus(), is(200));
       assertThat(Long.parseLong(response.getBody()), is(3l));
 
-      response = client.url("/current/countEmployees")
-          .setHeader("Content-Type", "avro/json")
-          .post("")
-          .toCompletableFuture()
-          .get();
+      response = post(client, "/current/countEmployees", "");
       assertThat(response.getStatus(), is(200));
       assertThat(Integer.parseInt(response.getBody()), is(3));
 
-      response = client.url("/current/makeManager")
-          .setHeader("Content-Type", "avro/json")
-          .post("{\"managerId\": 1, \"employeeId\": 2}")
-          .toCompletableFuture()
-          .get();
+      response = post(client, "/current/makeManager", "{\"managerId\": 1, \"employeeId\": 2}");
       assertThat(response.getStatus(), is(200));
 
-      response = client.url("/current/makeManager")
-          .setHeader("Content-Type", "avro/json")
-          .post("{\"managerId\": 1, \"employeeId\": 3}")
-          .toCompletableFuture()
-          .get();
+      response = post(client, "/current/makeManager", "{\"managerId\": 1, \"employeeId\": 3}");
       assertThat(response.getStatus(), is(200));
 
-      response = client.url("/current/getEmployees")
-          .setHeader("Content-Type", "avro/json")
-          .post("{\"managerId\": 1}")
-          .toCompletableFuture()
-          .get();
+      response = post(client, "/current/getEmployees", "{\"managerId\": 1}");
       assertThat(response.getStatus(), is(200));
       assertThat(response.getBody(),
           is("[{\"id\":2,\"firstName\":\"Jackson\",\"lastName\":\"Wang\",\"gender\":\"MALE\",\"dateOfBirth\":{\"year\":2001,\"month\":5,\"day\":15}},{\"id\":3,\"firstName\":\"Christine\",\"lastName\":\"Lee\",\"gender\":\"FEMALE\",\"dateOfBirth\":{\"year\":2000,\"month\":8,\"day\":20}}]"));
 
-      response = client.url("/current/getManager")
-          .setHeader("Content-Type", "avro/json")
-          .post("{\"employeeId\": 2}")
-          .toCompletableFuture()
-          .get();
+      response = post(client, "/current/getManager", "{\"employeeId\": 2}");
       assertThat(response.getStatus(), is(200));
       assertThat(response.getBody(),
           is("{\"id\":1,\"firstName\":\"Thomas\",\"lastName\":\"Feng\",\"gender\":\"MALE\",\"dateOfBirth\":{\"year\":2000,\"month\":1,\"day\":1}}"));
 
-      response = client.url("/current/getManager")
-          .setHeader("Content-Type", "avro/json")
-          .post("{\"employeeId\": 3}")
-          .toCompletableFuture()
-          .get();
+      response = post(client, "/current/getManager", "{\"employeeId\": 3}");
       assertThat(response.getStatus(), is(200));
       assertThat(response.getBody(),
           is("{\"id\":1,\"firstName\":\"Thomas\",\"lastName\":\"Feng\",\"gender\":\"MALE\",\"dateOfBirth\":{\"year\":2000,\"month\":1,\"day\":1}}"));
@@ -154,77 +121,40 @@ public class IntegrationTest {
   @Test
   public void testD2RequestWithLegacyProtocol() {
     running(testServer(PORT, application), ExceptionWrapper.wrapFunction(() -> {
-      WSResponse response;
-      WSClient client = WS.newClient(PORT);
+      StandaloneAhcWSClient client = application.injector().instanceOf(StandaloneAhcWSClient.class);
+      StandaloneWSResponse response;
 
-      response = client.url("/legacy/countEmployees").get().toCompletableFuture().get();
+      response = get(client, "/legacy/countEmployees", null, null, null, null);
       assertThat(response.getStatus(), is(400));
 
-      response = client.url("/legacy/addEmployee")
-          .setQueryParameter("firstName", "Thomas")
-          .setQueryParameter("lastName", "Feng")
-          .get()
-          .toCompletableFuture()
-          .get();
+      response = get(client, "/legacy/addEmployee", "firstName", "Thomas", "lastName", "Feng");
       assertThat(response.getStatus(), is(200));
       assertThat(Long.parseLong(response.getBody()), is(1l));
 
-      response = client.url("/legacy/addEmployee")
-          .setQueryParameter("firstName", "Jackson")
-          .setQueryParameter("lastName", "Wang")
-          .get()
-          .toCompletableFuture()
-          .get();
+      response = get(client, "/legacy/addEmployee", "firstName", "Jackson", "lastName", "Wang");
       assertThat(response.getStatus(), is(200));
       assertThat(Long.parseLong(response.getBody()), is(2l));
 
-      response = client.url("/legacy/addEmployee")
-          .setQueryParameter("firstName", "Christine")
-          .setQueryParameter("lastName", "Lee")
-          .get()
-          .toCompletableFuture()
-          .get();
+      response = get(client, "/legacy/addEmployee", "firstName", "Christine", "lastName", "Lee");
       assertThat(response.getStatus(), is(200));
       assertThat(Long.parseLong(response.getBody()), is(3l));
 
-      response = client.url("/legacy/makeManager")
-          .setQueryParameter("managerId", "1")
-          .setQueryParameter("employeeId", "2")
-          .get()
-          .toCompletableFuture()
-          .get();
+      response = get(client, "/legacy/makeManager", "managerId", "1", "employeeId", "2");
       assertThat(response.getStatus(), is(200));
 
-      response = client.url("/legacy/makeManager")
-          .setQueryParameter("managerId", "1")
-          .setQueryParameter("employeeId", "3")
-          .get()
-          .toCompletableFuture()
-          .get();
+      response = get(client, "/legacy/makeManager", "managerId", "1", "employeeId", "3");
       assertThat(response.getStatus(), is(200));
 
-      response = client.url("/legacy/getEmployees")
-          .setQueryParameter("managerId", "1")
-          .get()
-          .toCompletableFuture()
-          .get();
+      response = get(client, "/legacy/getEmployees", "managerId", "1", null, null);
       assertThat(response.getStatus(), is(200));
       assertThat(response.getBody(),
           is("[{\"id\": 2, \"firstName\": \"Jackson\", \"lastName\": \"Wang\"}, {\"id\": 3, \"firstName\": \"Christine\", \"lastName\": \"Lee\"}]"));
 
-      response = client.url("/legacy/getManager")
-          .setQueryParameter("employeeId", "2")
-          .get()
-          .toCompletableFuture()
-          .get();
+      response = get(client, "/legacy/getManager", "employeeId", "2", null, null);
       assertThat(response.getStatus(), is(200));
       assertThat(response.getBody(), is("{\"id\": 1, \"firstName\": \"Thomas\", \"lastName\": \"Feng\"}"));
 
-      response = client.url("/legacy/getManager")
-          .setQueryParameter("employeeId", "3")
-          .get()
-          .toCompletableFuture()
-          .get();
+      response = get(client, "/legacy/getManager", "employeeId", "3", null, null);
       assertThat(response.getStatus(), is(200));
       assertThat(response.getBody(), is("{\"id\": 1, \"firstName\": \"Thomas\", \"lastName\": \"Feng\"}"));
     }));
@@ -264,6 +194,19 @@ public class IntegrationTest {
     });
   }
 
+  private StandaloneWSResponse get(StandaloneAhcWSClient client, String endpoint, String queryParameterName1,
+      String queryParameterValue1, String queryParameterName2, String queryParameterValue2) throws ExecutionException,
+      InterruptedException {
+    StandaloneAhcWSRequest request = client.url("http://localhost:" + PORT + endpoint);
+    if (queryParameterName1 != null) {
+      request = request.addQueryParameter(queryParameterName1, queryParameterValue1);
+    }
+    if (queryParameterName2 != null) {
+      request = request.addQueryParameter(queryParameterName2, queryParameterValue2);
+    }
+    return request.get().toCompletableFuture().get();
+  }
+
   private Employee getEmployee(String firstName, String lastName, boolean generateNewFields) {
     Employee employee = new Employee();
     employee.setFirstName(firstName);
@@ -281,5 +224,21 @@ public class IntegrationTest {
     date.setMonth(RANDOM.nextInt() % 12);
     date.setDay(RANDOM.nextInt() % 28);
     return date;
+  }
+
+  private StandaloneWSResponse post(StandaloneAhcWSClient client, String endpoint, String data)
+      throws ExecutionException, InterruptedException {
+    return post(client, endpoint, null, null, data);
+  }
+
+  private StandaloneWSResponse post(StandaloneAhcWSClient client, String endpoint, String headerName,
+      String headerValue, String data) throws ExecutionException, InterruptedException {
+    StandaloneAhcWSRequest request = client.url("http://localhost:" + PORT + endpoint).setContentType("avro/json");
+    if (headerName != null) {
+      request = request.addHeader(headerName, headerValue);
+    }
+    SourceBodyWritable bodyWritable = new SourceBodyWritable(
+        StreamConverters.fromInputStream(() -> new ByteArrayInputStream(data.getBytes())));
+    return request.post(bodyWritable).toCompletableFuture().get();
   }
 }

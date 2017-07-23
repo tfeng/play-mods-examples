@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 import static play.test.Helpers.running;
 import static play.test.Helpers.testServer;
 
+import java.io.ByteArrayInputStream;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -38,6 +39,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 
+import akka.stream.javadsl.StreamConverters;
 import controllers.protocols.Example;
 import controllers.protocols.ExampleClient;
 import me.tfeng.playmods.avro.AvroComponent;
@@ -51,9 +53,10 @@ import play.Application;
 import play.ApplicationLoader.Context;
 import play.Environment;
 import play.libs.Json;
-import play.libs.ws.WS;
-import play.libs.ws.WSClient;
-import play.libs.ws.WSResponse;
+import play.libs.ws.SourceBodyWritable;
+import play.libs.ws.StandaloneWSResponse;
+import play.libs.ws.ahc.StandaloneAhcWSClient;
+import play.libs.ws.ahc.StandaloneAhcWSRequest;
 
 /**
  * @author Thomas Feng (huining.feng@gmail.com)
@@ -102,21 +105,17 @@ public class IntegrationTest {
   @Test
   public void testD2Request() {
     running(testServer(PORT, application), ExceptionWrapper.wrapFunction(() -> {
-      WSResponse response;
-      WSClient client = WS.newClient(PORT);
+      StandaloneAhcWSClient client = application.injector().instanceOf(StandaloneAhcWSClient.class);
+      StandaloneWSResponse response;
 
-      response = authenticateClient(TRUSTED_CLIENT_ID, TRUSTED_CLIENT_SECRET);
-      String clientAccessToken = response.asJson().findPath("accessToken").textValue();
+      response = authenticateClient(client, TRUSTED_CLIENT_ID, TRUSTED_CLIENT_SECRET);
+      String clientAccessToken = Json.parse(response.getBody()).findPath("accessToken").textValue();
 
-      response = authenticateUser(clientAccessToken, "test", USER_PASSWORD);
-      String userAccessToken = response.asJson().findPath("accessToken").textValue();
+      response = authenticateUser(client, clientAccessToken, "test", USER_PASSWORD);
+      String userAccessToken = Json.parse(response.getBody()).findPath("accessToken").textValue();
 
-      response = client.url("/proxy")
-          .setQueryParameter("message", "Test Message through Client")
-          .setHeader("Authorization", "Bearer " + userAccessToken)
-          .get()
-          .toCompletableFuture()
-          .get();
+      response = get(client, "/proxy", "Authorization", "Bearer " + userAccessToken, "message",
+          "Test Message through Client");
       assertThat(response.getBody(), is("Test Message through Client"));
     }));
   }
@@ -124,12 +123,8 @@ public class IntegrationTest {
   @Test
   public void testD2RequestMissingAuthorization() {
     running(testServer(PORT, application), ExceptionWrapper.wrapFunction(() -> {
-      WSClient client = WS.newClient(PORT);
-      WSResponse response = client.url("/proxy")
-          .setQueryParameter("message", "Test Message through Client")
-          .get()
-          .toCompletableFuture()
-          .get();
+      StandaloneAhcWSClient client = application.injector().instanceOf(StandaloneAhcWSClient.class);
+      StandaloneWSResponse response = get(client, "/proxy", "message", "Test Message through Client");
       assertThat(response.getStatus(), is(401));
     }));
   }
@@ -137,18 +132,14 @@ public class IntegrationTest {
   @Test
   public void testD2RequestWrongAuthorization() {
     running(testServer(PORT, application), ExceptionWrapper.wrapFunction(() -> {
-      WSResponse response;
-      WSClient client = WS.newClient(PORT);
+      StandaloneAhcWSClient client = application.injector().instanceOf(StandaloneAhcWSClient.class);
+      StandaloneWSResponse response;
 
-      response = authenticateClient(TRUSTED_CLIENT_ID, TRUSTED_CLIENT_SECRET);
-      String clientAccessToken = response.asJson().findPath("accessToken").textValue();
+      response = authenticateClient(client, TRUSTED_CLIENT_ID, TRUSTED_CLIENT_SECRET);
+      String clientAccessToken = Json.parse(response.getBody()).findPath("accessToken").textValue();
 
-      response = client.url("/proxy")
-          .setQueryParameter("message", "Test Message through Client")
-          .setHeader("Authorization", "Bearer " + clientAccessToken)
-          .get()
-          .toCompletableFuture()
-          .get();
+      response = get(client, "/proxy", "Authorization", "Bearer " + clientAccessToken, "message",
+          "Test Message through Client");
       assertThat(response.getStatus(), is(401));
     }));
   }
@@ -156,13 +147,14 @@ public class IntegrationTest {
   @Test
   public void testDirectRequest() {
     running(testServer(PORT, application), ExceptionWrapper.wrapFunction(() -> {
-      WSResponse response;
+      StandaloneAhcWSClient client = application.injector().instanceOf(StandaloneAhcWSClient.class);
+      StandaloneWSResponse response;
 
-      response = authenticateClient(TRUSTED_CLIENT_ID, TRUSTED_CLIENT_SECRET);
-      String clientAccessToken = response.asJson().findPath("accessToken").textValue();
+      response = authenticateClient(client, TRUSTED_CLIENT_ID, TRUSTED_CLIENT_SECRET);
+      String clientAccessToken = Json.parse(response.getBody()).findPath("accessToken").textValue();
 
-      response = authenticateUser(clientAccessToken, "test", USER_PASSWORD);
-      String userAccessToken = response.asJson().findPath("accessToken").textValue();
+      response = authenticateUser(client, clientAccessToken, "test", USER_PASSWORD);
+      String userAccessToken = Json.parse(response.getBody()).findPath("accessToken").textValue();
 
       TransceiverWithAuthorization transceiver =
           new TransceiverWithAuthorization(new URL("http", "localhost", PORT, "/example"), userAccessToken);
@@ -194,8 +186,9 @@ public class IntegrationTest {
   public void testDirectRequestWrongAuthorization() {
     running(testServer(PORT, application), ExceptionWrapper.wrapFunction(() -> {
       try {
-        WSResponse response = authenticateClient(TRUSTED_CLIENT_ID, TRUSTED_CLIENT_SECRET);
-        String clientAccessToken = response.asJson().findPath("accessToken").textValue();
+        StandaloneAhcWSClient client = application.injector().instanceOf(StandaloneAhcWSClient.class);
+        StandaloneWSResponse response = authenticateClient(client, TRUSTED_CLIENT_ID, TRUSTED_CLIENT_SECRET);
+        String clientAccessToken = Json.parse(response.getBody()).findPath("accessToken").textValue();
 
         TransceiverWithAuthorization transceiver =
             new TransceiverWithAuthorization(new URL("http", "localhost", PORT, "/example"), clientAccessToken);
@@ -213,34 +206,43 @@ public class IntegrationTest {
   @Test
   public void testUserAccessDeniedWithUntrustedClient() {
     running(testServer(PORT, application), ExceptionWrapper.wrapFunction(() -> {
-      WSResponse response;
+      StandaloneAhcWSClient client = application.injector().instanceOf(StandaloneAhcWSClient.class);
+      StandaloneWSResponse response;
 
-      response = authenticateClient(UNTRUSTED_CLIENT_ID, UNTRUSTED_CLIENT_SECRET);
-      String clientAccessToken = response.asJson().findPath("accessToken").textValue();
+      response = authenticateClient(client, UNTRUSTED_CLIENT_ID, UNTRUSTED_CLIENT_SECRET);
+      String clientAccessToken = Json.parse(response.getBody()).findPath("accessToken").textValue();
 
-      response = authenticateUser(clientAccessToken, "test", USER_PASSWORD);
+      response = authenticateUser(client, clientAccessToken, "test", USER_PASSWORD);
       assertThat(response.getStatus(), is(401));
     }));
   }
 
-  private WSResponse authenticateClient(String clientId, String clientSecret) throws ExecutionException,
-      InterruptedException {
-    ObjectNode body = Json.newObject();
-    body.setAll(ImmutableMap.of("clientId", body.textNode(clientId), "clientSecret", body.textNode(clientSecret)));
-    WSClient client = WS.newClient(PORT);
-    return client.url("/client/authenticate").post(body).toCompletableFuture().get();
-  }
-
-  private WSResponse authenticateUser(String clientAccessToken, String username, String password)
+  private StandaloneWSResponse authenticateClient(StandaloneAhcWSClient client, String clientId, String clientSecret)
       throws ExecutionException, InterruptedException {
     ObjectNode body = Json.newObject();
+    body.setAll(ImmutableMap.of("clientId", body.textNode(clientId), "clientSecret", body.textNode(clientSecret)));
+    return post(client, "/client/authenticate", body.toString());
+  }
+
+  private StandaloneWSResponse authenticateUser(StandaloneAhcWSClient client, String clientAccessToken, String username,
+      String password) throws ExecutionException, InterruptedException {
+    ObjectNode body = Json.newObject();
     body.setAll(ImmutableMap.of("username", body.textNode(username), "password", body.textNode(password)));
-    WSClient client = WS.newClient(PORT);
-    return client.url("/user/authenticate")
-        .setHeader("Authorization", "Bearer " + clientAccessToken)
-        .post(body)
-        .toCompletableFuture()
-        .get();
+    return post(client, "/user/authenticate", "Authorization", "Bearer " + clientAccessToken, body.toString());
+  }
+
+  private StandaloneWSResponse get(StandaloneAhcWSClient client, String endpoint, String queryParameterName,
+      String queryParameterValue) throws ExecutionException, InterruptedException {
+    return get(client, endpoint, null, null, queryParameterName, queryParameterValue);
+  }
+
+  private StandaloneWSResponse get(StandaloneAhcWSClient client, String endpoint, String headerName, String headerValue,
+      String queryParameterName, String queryParameterValue) throws ExecutionException, InterruptedException {
+    StandaloneAhcWSRequest request = client.url("http://localhost:" + PORT + endpoint);
+    if (headerName != null) {
+      request = request.addHeader(headerName, headerValue);
+    }
+    return request.addQueryParameter(queryParameterName, queryParameterValue).get().toCompletableFuture().get();
   }
 
   private AvroComponent getAvroComponent() {
@@ -249,5 +251,21 @@ public class IntegrationTest {
 
   private HttpRequestPoster getRequestPoster() {
     return application.injector().instanceOf(ApplicationManager.class).getBean(HttpRequestPoster.class);
+  }
+
+  private StandaloneWSResponse post(StandaloneAhcWSClient client, String endpoint, String data)
+      throws ExecutionException, InterruptedException {
+    return post(client, endpoint, null, null, data);
+  }
+
+  private StandaloneWSResponse post(StandaloneAhcWSClient client, String endpoint, String headerName,
+      String headerValue, String data) throws ExecutionException, InterruptedException {
+    StandaloneAhcWSRequest request = client.url("http://localhost:" + PORT + endpoint).setContentType("application/json");
+    if (headerName != null) {
+      request = request.addHeader(headerName, headerValue);
+    }
+    SourceBodyWritable bodyWritable = new SourceBodyWritable(
+        StreamConverters.fromInputStream(() -> new ByteArrayInputStream(data.getBytes())));
+    return request.post(bodyWritable).toCompletableFuture().get();
   }
 }
