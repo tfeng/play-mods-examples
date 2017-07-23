@@ -9,7 +9,7 @@ lazy val root = project in file(".") enablePlugins(PlayJava)
 libraryDependencies ++= Seq(
   "commons-io" % "commons-io" % "2.5",
   "com.google.guava" % "guava" % "22.0",
-  "me.tfeng.play-mods" % "avro-d2" % "0.10.0-SNAPSHOT",
+  "me.tfeng.play-mods" % "avro-d2" % "0.10.0",
   javaWs % "test"
 )
 
